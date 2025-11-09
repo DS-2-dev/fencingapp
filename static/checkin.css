@@ -1,0 +1,101 @@
+.checkin-bar {
+  width: 30%;                    
+  margin: 30px auto;             
+  padding: 20px 40px;            
+  height: 50px;       
+  border-radius: 20px; 
+  background: radial-gradient(
+    circle at top left,
+    rgba(255,255,255,0.3),
+    rgba(255,255,255,0.1)
+  );
+  backdrop-filter: blur(20px) saturate(200%) contrast(130%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%) contrast(130%);
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow:
+    inset 0 0 40px rgba(255,255,255,0.08),
+    0 4px 20px rgba(0,0,0,0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: row;
+  gap: 14px;
+
+  position: fixed;            
+  top: calc(30px + 80px);     
+  left: 0;                    
+  z-index: 999;
+  margin-left: 106px;
+
+  transition: width 0.3s ease;
+  transform-origin: left center;
+}
+
+/* Buttons / editable control in the bar: apply to any element using the frutiger-aero-button class
+   inside the checkin-bar so a contenteditable element can match the button appearance
+   and behavior without changing your existing styles. */
+.checkin-bar .frutiger-aero-button {
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-weight: 500;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  /* Make non-form elements behave like buttons for layout and focus */
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Placeholder styling for contenteditable control: show centered placeholder text
+   when the element is empty. It won't interfere with the existing ::after gloss. */
+.checkin-bar .frutiger-aero-button[contenteditable][data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: rgba(255, 255, 255, 0.9);
+  opacity: 1;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+/* Hide the placeholder when focused or when content is present */
+.checkin-bar .frutiger-aero-button[contenteditable]:focus::before,
+.checkin-bar .frutiger-aero-button[contenteditable]:not(:empty)::before {
+  display: none;
+}
+
+/* Left control: target the first .frutiger-aero-button inside the bar (was mistakenly
+   targeting .checkin-bar:first-child which affected the bar itself). */
+.checkin-bar .frutiger-aero-button:first-child { 
+  --hue: 8deg;
+  width: 200px; 
+  margin-right: 0; 
+  
+}
+
+/* Right control (previously button). Target the element with the class so it
+   works whether it's a <button>, <a>, or a contenteditable <div>. */
+.checkin-bar .frutiger-aero-button:last-child { 
+  --hue: 178.5deg; 
+  width: 200px; 
+  
+}
+
+/* Expand the right control when hovered or focused (for keyboard/focus typing). */
+.checkin-bar .frutiger-aero-button:last-child:hover,
+.checkin-bar .frutiger-aero-button:last-child:focus {
+  width: 240px;  /* expansion */
+}
+
+/* Expand the whole bar when the right control is hovered or focused */
+.checkin-bar:has(.frutiger-aero-button:last-child:hover, .frutiger-aero-button:last-child:focus) {
+  width: 34%;    /* bar expansion */
+}
+
+/* Remove default focus outline and keep the glow when the checkin control is focused */
+.checkin-bar .frutiger-aero-button:focus {
+  outline: none;
+  box-shadow: 0 0 16px currentColor, 0 0 24px currentColor;
+}

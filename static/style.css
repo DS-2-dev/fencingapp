@@ -1,6 +1,5 @@
 body {
-  background-color: #121212;
-  /*url("https://copilot.microsoft.com/th/id/BCO.1572f817-41ec-4c2e-8adf-14197424666f.png"); */
+  background-image: url("https://luciellong.com/wp-content/uploads/2024/03/art-peinture-tableau-escrime-epee-sport-jo-paris-2024.jpg");
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -16,17 +15,7 @@ body {
 }
 
 /* Simulated magnified blur layer */
-.background-layer {
-  background-image: url("https://copilot.microsoft.com/th/id/BCO.1572f817-41ec-4c2e-8adf-14197424666f.png");
-  background-size: 110%;
-  background-position: center;
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: -1;
-}
+
 
 .outer-glass {
   position: relative;
@@ -107,7 +96,7 @@ body {
   color: var(--fg);
   font-family: "Lucida Grande", "Lucida Sans Unicode", "Segoe UI", system-ui, sans-serif;
   font-weight: 700;
-  text-shadow: 0 2px 0.5em rgba(0, 0, 0, 0.2);
+  text-shadow: 0 2px 0.5em rgba(0, 0, 0, 0.25);
   cursor: pointer;
   position: relative;
   transition: all 300ms ease;
@@ -134,7 +123,7 @@ body {
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.2);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  
   transition: background 0.3s ease, box-shadow 0.3s ease;
 }
 
@@ -148,16 +137,6 @@ body {
   pointer-events: none;
   border-radius: inherit;
 }
-
-/* Hover glow */
-.frutiger-aero-button:hover {
-  box-shadow: 0 0 16px currentColor, 0 0 24px currentColor;
-  background: rgba(255, 255, 255, 0.25);
-}
-
-
-
-
 
 /* Equalize all 4 main home page buttons */
 .home-buttons .frutiger-aero-button {
@@ -195,12 +174,6 @@ body {
   pointer-events: none;
 }
 
-
-
-.frutiger-aero-button:active {
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
-  transform: translateY(1px);
-}
 
 /* Custom Hues for Each Button */
 .ask-fred-btn { --hue: 90; }
@@ -321,8 +294,8 @@ body {
 
 /* Match home button hover glow to menu bar style */
 .frutiger-aero-button:hover {
+  /* Keep the original background/gradient and only add the glow on hover. */
   box-shadow: 0 0 16px currentColor, 0 0 24px currentColor;
-  background: rgba(255, 255, 255, 0.25);
   transform: none; /* remove the lift effect */
 }
 

@@ -1,6 +1,15 @@
 {% extends "base.html" %}
 {% block content %}
-  <h1>Welcome to the Check-in page</h1>
-  <!-- Your clipboard-style layout goes here -->
+<link rel="stylesheet" href="{{ url_for('static', filename='checkin.css') }}">
+
+<div class="checkin-bar">
+  <button class="frutiger-aero-button">Remove Fencer</button>
+  <!-- Make this element contenteditable so it accepts typed input while keeping the same
+       visual styling (uses the existing .frutiger-aero-button CSS). We keep role and
+       tabindex for accessibility and focus behavior so the bar can expand on focus. -->
+  <div class="frutiger-aero-button" contenteditable="true" role="searchbox" aria-label="Search" tabindex="0" data-placeholder="Search"></div>
+</div>
+
+<script src="{{ url_for('static', filename='checkin.js') }}"></script>
 
 {% endblock %}
