@@ -1,0 +1,428 @@
+.menu-bar-glass {
+  width: 95%;
+  margin: 30px auto;
+  padding: 20px 40px;
+  border-radius: 60px 60px 20px 20px;
+  background: radial-gradient(
+    circle at top left,
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0.1)
+  );
+  backdrop-filter: blur(20px) saturate(200%) contrast(130%);
+  -webkit-backdrop-filter: blur(60px) saturate(300%) contrast(130%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    inset 0 0 40px rgba(255, 255, 255, 0.08),
+    0 4px 20px rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 5;
+}
+
+.menu-bar-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: left;
+  gap: 10px;
+}
+
+.menu-buttons {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  justify-content: left;
+}
+
+.event-nav {
+  display: flex;
+  align-items: right;
+  gap: 10px;
+  font-size: 1rem;
+  color: white;
+  font-weight: 600;
+}
+
+.nav-arrow {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  padding: 6px 12px;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+.summary-container {
+  padding-top: 100px;
+  text-align: center;
+  z-index: 3;
+  position: relative;
+}
+
+.summary-title {
+  font-size: 2.8rem;
+  font-weight: 800;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+.menu-block {
+  width: 300px;
+  margin: 40px auto;
+  padding: 30px 20px;
+  border-radius: 60px 60px 20px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(48px) saturate(250%) contrast(120%);
+  -webkit-backdrop-filter: blur(48px) saturate(250%) contrast(120%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    inset 0 0 40px rgba(255, 255, 255, 0.08),
+    0 4px 20px rgba(0, 0, 0, 0.2);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  z-index: 5;
+}
+
+.menu-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.menu-column {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+
+.event-nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  color: white;
+  font-weight: 600;
+}
+
+.nav-arrow {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  padding: 6px 12px;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* Keep nav bar same width as before */
+.glass-menu-bar {
+  position: fixed;                 /* stick it to the top */
+  top: 20px;                       /* distance from the very top */
+  left: 50%;                       /* anchor to the horizontal center */
+  transform: translateX(-50%);     /* shift back by half its width */
+  
+  background: radial-gradient(
+    circle at top left,
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0.1)
+  );
+  backdrop-filter: blur(20px) saturate(200%) contrast(130%);
+  -webkit-backdrop-filter: blur(60px) saturate(300%) contrast(130%);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  box-shadow:
+  inset 0 0 40px rgba(255, 255, 255, 0.08),
+  0 4px 20px rgba(0, 0, 0, 0.2);
+  
+  padding: 20px 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;                   /* keep it above page content */
+}
+
+/* Top Row */
+.top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.main-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.event-nav {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1rem;
+  color: white;
+  font-weight: 600;
+}
+
+.nav-arrow {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 50%;
+  padding: 6px 12px;
+  color: white;
+  font-size: 1.2rem;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+}
+
+/* Bottom Row */
+.bottom-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.bottom-left,
+.bottom-right {
+  display: flex;
+}
+
+/* Remove old summary title */
+.summary-container,
+.summary-title {
+  display: none !important;
+}
+
+.checkin-btn {
+  min-width: 120px;   /* wider than the default */
+  text-align: center; /* keeps text centered */
+}
+
+.circle-arrow {
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(30px) saturate(200%) contrast(120%);
+  -webkit-backdrop-filter: blur(30px) saturate(200%) contrast(120%);
+  box-shadow:
+    inset 0 0 12px rgba(255, 255, 255, 0.15),
+    0 4px 10px rgba(0, 0, 0, 0.25);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 1.2rem;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative; /* needed for gloss overlay */
+  color: white;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+}
+
+/* Gloss highlight overlay */
+.circle-arrow::after {
+  content: "";
+  position: absolute;
+  top: 8%;
+  left: 20%;
+  width: 60%;
+  height: 35%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.85),
+    rgba(255, 255, 255, 0.05)
+  );
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.circle-arrow:hover {
+  transform: scale(1.1);
+  box-shadow:
+    inset 0 0 16px rgba(255, 255, 255, 0.25),
+    0 6px 14px rgba(0, 0, 0, 0.3);
+}
+
+.circle-arrow:active {
+  transform: scale(0.95);
+}
+
+.top-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+/* Left group */
+.main-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+/* Middle group (Add Fencer + Events) */
+.middle-buttons {
+  display: flex;
+  gap: 12px;
+  justify-content: left;
+  flex: 0; /* expands to center between left and right */
+}
+
+/* Right group (arrows) */
+.event-nav {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+/* Add Fencer button: just wide enough */
+.add-fencer-btn {
+  min-width: 130px;   /* enough so text isn’t mushed */
+  padding: 12px 22px; /* balanced padding */
+}
+
+/* Events button can stay compact */
+.events-btn {
+  min-width: 110px;
+  padding: 12px 20px;
+}
+
+.nav-btn {
+  --sat: 0.22;
+  --glow-intensity: 0.45;
+  --fg: white;
+  --bg: oklch(75% var(--sat) var(--hue) / 0.8);
+  --bg-dark: oklch(45% var(--sat) var(--hue) / 0.75);
+  --bottom-glow: radial-gradient(
+    farthest-corner at bottom center,
+    rgba(255, 255, 255, var(--glow-intensity)),
+    transparent
+  );
+  background-color: var(--bg);
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg));
+  border: 1px solid var(--bg);
+  border-radius: 9999px;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
+  color: white;
+  font-family: "Lucida Grande", "Lucida Sans Unicode", "Segoe UI", system-ui, sans-serif;
+  font-weight: 700;
+  text-shadow: 0 2px 0.5em rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  position: relative;
+  transition: all 300ms ease;
+  user-select: none;
+  -webkit-user-select: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 15px;
+  font-size: 1rem;
+  text-align: center;
+}
+
+/* Color hues for each button */
+.home-btn { --hue: 235deg; }
+.summary-btn { --hue: 140deg; }
+.checkin-btn { --hue: 95deg; }
+.seeding-btn { --hue: 25deg; }
+.pools-btn { --hue: 305deg; }
+.de-btn { --hue: 200deg; }
+.add-fencer-btn { --hue: 45deg; }
+.events-btn { --hue: 270deg; }
+
+
+
+
+.nav-btn:hover {
+  box-shadow: 0 0 16px white, 0 0 24px white; /* pure white glow */
+  background: rgba(255, 255, 255, 0.25);
+  color: white; /* make sure glow is white */
+}
+
+
+/* Shared nav button base style */
+.frutiger-aero-button {
+  padding: 12px 20px;
+  border-radius: 30px;
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  backdrop-filter: blur(10px);          /* frosted glass effect */
+  -webkit-backdrop-filter: blur(10px);  /* Safari support */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25); /* subtle depth */
+  transition: box-shadow 250ms ease, transform 200ms ease, background 250ms ease;
+}
+/* Slightly smaller Check-In button */
+/* Keep Check-In visually consistent, just shorter in length */
+
+.checkin-btn {
+  width: 64px;          /* shrink to fit text */
+  min-width: unset;     /* don’t force a minimum */
+  max-width: none;      /* no artificial cap */
+  padding: 14px 20px;   /* slightly less horizontal padding */
+  flex: 0 0 auto;       /* don’t let flexbox stretch it */
+}
+
+.summary-btn {
+  width: auto;          /* shrink to fit text */
+  min-width: unset;     /* don’t force a minimum */
+  max-width: none;      /* no artificial cap */
+  padding: 14px 20px;   /* slightly less horizontal padding */
+  flex: 0 0 auto;       /* don’t let flexbox stretch it */
+}
+
+.home-btn {
+  width: auto;          /* shrink to fit text */
+  min-width: unset;     /* don’t force a minimum */
+  max-width: none;      /* no artificial cap */
+  padding: 14px 20px;   /* slightly less horizontal padding */
+  flex: 0 0 auto;       /* don’t let flexbox stretch it */
+}
+
+
+
+.seeding-btn {
+  width: auto;          /* shrink to fit text */
+  min-width: unset;     /* don’t force a minimum */
+  max-width: none;      /* no artificial cap */
+  padding: 14px 20px;   /* slightly less horizontal padding */
+  flex: 0 0 auto;       /* don’t let flexbox stretch it */
+}
+
+.pools-btn {
+  width: auto;          /* shrink to fit text */
+  min-width: unset;     /* don’t force a minimum */
+  max-width: none;      /* no artificial cap */
+  padding: 14px 20px;   /* slightly less horizontal padding */
+  flex: 0 0 auto;       /* don’t let flexbox stretch it */
+}
+
+.de-btn {
+  width: auto;          /* shrink to fit text */
+  min-width: unset;     /* don’t force a minimum */
+  max-width: none;      /* no artificial cap */
+  padding: 14px 20px;   /* slightly less horizontal padding */
+  flex: 0 0 auto;       /* don’t let flexbox stretch it */
+}
+
+
+/* Make Add Fencer + Events slightly smaller */
+.add-fencer-btn,.events-btn {
+  padding: 8px 16px;      
+  font-size: 0.95rem;      
+  border-radius: 30px;    
+}
+
+
+
+

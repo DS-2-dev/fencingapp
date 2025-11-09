@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{{ title }}</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="{{ url_for('static', filename='nav-style.css') }}">
+</head>
+<body>
+  
+
+  <!-- Glass Menu Bar -->
+  <div class="glass-menu-bar">
+    <div class="top-row">
+      <div class="main-buttons">
+        <a href="/" class="nav-btn frutiger-aero-button home-btn">Home</a>
+        <a href="/summary" class="nav-btn frutiger-aero-button summary-btn">Summary</a>
+        <a href="/checkin" class="nav-btn frutiger-aero-button checkin-btn">Check-in</a>
+        <a href="/seeding" class="nav-btn frutiger-aero-button seeding-btn">Seeding</a>
+        <a href="/pools" class="nav-btn frutiger-aero-button pools-btn">Pools</a>
+        <a href="/de" class="nav-btn frutiger-aero-button de-btn">DE</a>
+      </div>
+
+      <!-- Middle group: Add Fencer + Events -->
+      <div class="middle-buttons">
+        <a href="/add-fencer" class="nav-btn frutiger-aero-button add-fencer-btn">Add Fencer</a>
+        <a href="/events" class="nav-btn frutiger-aero-button events-btn">Events</a>
+      </div>
+
+      <!-- Right side: Arrow buttons -->
+      <div class="event-nav">
+        <button class="circle-arrow left-arrow">⬅️</button>
+        <button class="circle-arrow right-arrow">➡️</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Page Content -->
+  <main class="page-content">
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

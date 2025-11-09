@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fencing App</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <!-- Corner buttons -->
+  <button class="corner-button left-corner">
+    <div class="aero-core">
+      <span class="aero-icon">🔧</span>
+    </div>
+  </button>
+
+  <button class="corner-button right-corner">
+    <div class="aero-core">
+      <span class="aero-icon">❓</span>
+    </div>
+  </button>
+
+  <!-- Main content -->
+  <div class="outer-glass">
+    <h1>FENCE!</h1>
+    <div class="inner-glass">
+      <div class="button-grid">
+        <a href="/import-fred" class="frutiger-aero-button ask-fred-btn">Import Ask FRED</a>
+        <a href="/import-usa" class="frutiger-aero-button usa-fencing-btn">Import USA Fencing</a>
+        <a href="/summary" class="frutiger-aero-button new-tournament-btn">New Tournament</a>
+        <a href="/continue" class="frutiger-aero-button continue-btn">Continue Tournament</a>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,332 @@
+body {
+  background-color: #121212;
+  /*url("https://copilot.microsoft.com/th/id/BCO.1572f817-41ec-4c2e-8adf-14197424666f.png"); */
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  overflow: hidden;
+  position: relative;
+}
+
+/* Simulated magnified blur layer */
+.background-layer {
+  background-image: url("https://copilot.microsoft.com/th/id/BCO.1572f817-41ec-4c2e-8adf-14197424666f.png");
+  background-size: 110%;
+  background-position: center;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+}
+
+.outer-glass {
+  position: relative;
+
+  border-radius: 30px;
+  padding: 50px;
+  width: 670px;
+ 
+  text-align: center;
+  overflow: hidden;
+  z-index: 2;
+}
+
+.outer-glass h1 {
+  font-size: 2.8rem;
+  margin-bottom: 40px;
+  color: #ffffff;
+  position: relative;
+  z-index: 3;
+}
+
+.inner-glass {
+  background: radial-gradient(
+    circle at top left,
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0.1)
+  );
+  border-radius: 20px;
+  padding: 30px;
+  backdrop-filter: blur(20px) saturate(200%) contrast(130%);
+  -webkit-backdrop-filter: blur(60px) saturate(300%) contrast(130%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    inset 0 0 40px rgba(255, 255, 255, 0.08),
+    0 4px 20px rgba(0, 0, 0, 0.2);
+  position: relative;
+  z-index: 3;
+}
+
+.button-grid {
+  display: flex;
+  flex-wrap: wrap;          /* allow buttons to move to the next line */
+  justify-content: center;  /* center them horizontally */
+  gap: 20px;                /* spacing between buttons */
+}
+
+.button-grid .frutiger-aero-button {
+  width: 240px;      /* same width for all */
+  text-align: center;
+  flex: 0 0 auto;    /* don’t let flexbox stretch them */
+}
+
+
+.button-grid form {
+  width: 100%;
+}
+
+/* Frutiger Aero Button */
+.frutiger-aero-button {
+  --sat: 0.22;
+  --glow-intensity: 0.45;
+  --fg: white;
+  --bg: oklch(75% var(--sat) var(--hue) / 0.8);
+  --bg-dark: oklch(45% var(--sat) var(--hue) / 0.75);
+  --bottom-glow: radial-gradient(
+    farthest-corner at bottom center,
+    rgba(255, 255, 255, var(--glow-intensity)),
+    transparent
+  );
+
+  background-color: var(--bg);
+  background:
+    var(--bottom-glow),
+    linear-gradient(to bottom, var(--bg-dark), var(--bg));
+  border: 1px solid var(--bg);
+  border-radius: 9999px;
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
+  color: var(--fg);
+  font-family: "Lucida Grande", "Lucida Sans Unicode", "Segoe UI", system-ui, sans-serif;
+  font-weight: 700;
+  text-shadow: 0 2px 0.5em rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  position: relative;
+  transition: all 300ms ease;
+  user-select: none;
+  -webkit-user-select: none;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding: 15px;
+  font-size: 1rem;
+  text-align: center;
+}
+
+.frutiger-aero-button {
+  position: relative;
+  overflow: hidden;
+  padding: 14px 24px;
+  border-radius: 30px;
+  color: white;
+  text-decoration: none;
+  font-weight: 500;
+  font-size: 1rem;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+/* Glossy bottom glow */
+.frutiger-aero-button::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 40%;
+  background: linear-gradient(to top, rgba(255,255,255,0.25), transparent);
+  pointer-events: none;
+  border-radius: inherit;
+}
+
+/* Hover glow */
+.frutiger-aero-button:hover {
+  box-shadow: 0 0 16px currentColor, 0 0 24px currentColor;
+  background: rgba(255, 255, 255, 0.25);
+}
+
+
+
+
+
+/* Equalize all 4 main home page buttons */
+.home-buttons .frutiger-aero-button {
+  width: 240px;          /* same width for all */
+  text-align: center;
+  flex: 0 0 auto;        /* prevents stretching */
+}
+
+
+.home-buttons {
+  display: flex;
+  flex-wrap: wrap;       /* allows buttons to move to the next line */
+  justify-content: center;
+  gap: 20px;             /* spacing between buttons */
+}
+
+
+
+
+
+.frutiger-aero-button::after {
+  content: "";
+  position: absolute;
+  top: 4%;
+  left: 0.75em;
+  width: calc(100% - 1.5em);
+  height: 40%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.8),
+    rgba(255, 255, 255, 0.1)
+  );
+  border-radius: inherit;
+  transition: background 400ms ease;
+  pointer-events: none;
+}
+
+
+
+.frutiger-aero-button:active {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+  transform: translateY(1px);
+}
+
+/* Custom Hues for Each Button */
+.ask-fred-btn { --hue: 90; }
+.usa-fencing-btn { --hue: 250; }
+.new-tournament-btn { --hue: 40; }
+.continue-btn { --hue: 140; }
+
+/* Corner Button Outer Shell */
+.corner-button {
+  position: fixed;
+  bottom: 30px;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background: radial-gradient(
+    circle at center,
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0.15)
+  );
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  backdrop-filter: blur(48px) saturate(250%) contrast(120%);
+  -webkit-backdrop-filter: blur(48px) saturate(250%) contrast(120%);
+  box-shadow:
+    inset 0 0 20px rgba(255, 255, 255, 0.08),
+    0 4px 12px rgba(0, 0, 0, 0.2);
+  padding: 5px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  z-index: 10;
+  transition: transform 0.3s ease;
+}
+
+.aero-icon {
+  font-size: 1.6rem;
+  color: white;
+  font-weight: 700;
+  font-family: "Segoe UI", sans-serif;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2); /* matches button text */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+
+
+
+.corner-button:hover {
+  transform: scale(1.1);
+}
+
+.left-corner {
+  left: 30px;
+}
+
+.right-corner {
+  right: 30px;
+}
+
+/* Inner Aero Core */
+.aero-core {
+  --sat: 0.22;
+  --glow-intensity: 0.45;
+  --hue: 90; /* Yellow-green to match Ask FRED button */
+
+  --fg: white;
+  --bg: oklch(75% var(--sat) var(--hue) / 0.8);
+  --bg-dark: oklch(45% var(--sat) var(--hue) / 0.75);
+  --bottom-glow: radial-gradient(
+    farthest-corner at bottom center,
+    rgba(255, 255, 255, var(--glow-intensity)),
+    transparent
+  );
+
+  width: 45px;
+  height: 45px;
+  border-radius: 50%;
+  background-color: var(--bg);
+  background:
+    var(--bottom-glow),
+    linear-gradient(to bottom, var(--bg-dark), var(--bg));
+  border: 1px solid var(--bg);
+  box-shadow:
+    0 4px 4px rgba(0, 0, 0, 0.4),
+    inset 0 0 6px rgba(255, 255, 255, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  font-family: "Segoe UI", sans-serif;
+  font-weight: 700;
+  color: var(--fg);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+}
+.aero-core::after {
+  content: "";
+  position: absolute;
+  top: 4%;
+  left: 0.75em;
+  width: calc(100% - 1.5em);
+  height: 40%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.8),
+    rgba(255, 255, 255, 0.1)
+  );
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.left-corner .aero-core { --hue: 340; }  /* Tool button = Red */
+.right-corner .aero-core { --hue: 180; } /* Question button = Orange */
+
+
+/* Match home button hover glow to menu bar style */
+.frutiger-aero-button:hover {
+  box-shadow: 0 0 16px currentColor, 0 0 24px currentColor;
+  background: rgba(255, 255, 255, 0.25);
+  transform: none; /* remove the lift effect */
+}
+
+.nav-btn {
+  color: white; /* force white glow */
+}
+
