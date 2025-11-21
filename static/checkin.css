@@ -1,9 +1,9 @@
 .checkin-bar {
-  width: 30%;                    
-  margin: 30px auto;             
-  padding: 20px 40px;            
-  height: 50px;       
-  border-radius: 20px; 
+  width: 30%;
+  margin: 30px auto;
+  padding: 20px 40px;
+  height: 50px;
+  border-radius: 20px;
   background: radial-gradient(
     circle at top left,
     rgba(255,255,255,0.3),
@@ -21,14 +21,395 @@
   flex-direction: row;
   gap: 14px;
 
-  position: fixed;            
-  top: calc(30px + 80px);     
-  left: 0;                    
+  position: fixed;
+  top: calc(30px + 80px);
+  left: 106px; /* align with nav area using a fixed offset */
   z-index: 999;
-  margin-left: 106px;
+  /* Never allow the fixed bar to cause horizontal overflow: cap its width
+    relative to the viewport minus the left offset. Keeps layout stable. */
+  max-width: calc(100% - 120px);
 
   transition: width 0.3s ease;
   transform-origin: left center;
+}
+
+/* Cards stack above the checkin bar */
+.cards-stack {
+  /* Position the cards underneath the fixed checkin bar so they appear stacked below it */
+  width: 40%;
+  position: fixed;
+  /* place below the menu + checkin bar (menu ~30px + 80px, checkin-bar approx 50px) */
+  top: calc(0px + 80px + 60px);
+  right: 150px; /* align with the checkin bar */
+  /* Prevent the cards stack from forcing a horizontal scrollbar. Use box-sizing
+     so padding does not expand the width. Avoid constraining with an arbitrary
+     max-width that can cause clipping on some viewports. */
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 990; /* sit under the checkin bar (which is 999) */
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-right: 20px;
+  scrollbar-gutter: stable both-edges;
+  /* Constrain vertically by anchoring to bottom so the container can scroll when
+     there are many cards. This prevents the element from growing indefinitely
+     and losing the scrollbar. */
+  bottom: 20px;
+}
+
+/* Removal mode styles: when active, hovering a card makes it visually solid and clickable */
+.cards-stack.removal-mode .fencer-card {
+  /* Only change background/color/border on hover — no rise or extra shadow */
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+}
+.cards-stack.removal-mode .fencer-card:hover {
+   backdrop-filter: blur(200px) saturate(400%) contrast(130%);
+  -webkit-backdrop-filter: blur(200px) saturate(300%) contrast(130%);
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow:
+    inset 0 0 40px rgba(255,255,255,0.08),
+    0 4px 20px rgba(0,0,0,0.2);
+  
+  cursor: pointer;
+}
+
+/* Visual state for active Remove button */
+.checkin-bar .frutiger-aero-button.remove-active,
+.checkin-bar .frutiger-aero-button.remove-active,
+body.removal-mode-active .checkin-bar .frutiger-aero-button:first-child {
+  /* Keep a clear white glow/outline when active to indicate removal mode */
+  outline: none;
+  /* bright white outer glow plus softer ring for depth */
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 34px rgba(255,255,255,0.55);
+  /* keep border subtle to avoid strong red outlines */
+  border-color: rgba(255,255,255,0.18);
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Fade-out effect for deleting cards: opacity transition only, no movement */
+.fencer-card.removing {
+  transition: opacity 320ms ease;
+  opacity: 0;
+  pointer-events: none;
+}
+.cards-empty {
+  color: rgba(255,255,255,0.9);
+  text-align: center;
+  padding: 8px 12px;
+}
+.fencer-card {
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box; /* ensure padding doesn't exceed container */
+  display: flex;
+  will-change: transform;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 18px;
+  border-radius: 20px;
+  /* Use the same translucent glass style used elsewhere for "clear card" effect */
+  background: radial-gradient(
+    circle at top left,
+    rgba(255,255,255,0.3),
+    rgba(255,255,255,0.08)
+  );
+  backdrop-filter: blur(18px) saturate(180%) contrast(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%) contrast(120%);
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow: inset 0 0 24px rgba(255,255,255,0.06), 0 6px 18px rgba(0,0,0,0.22);
+  color: white;
+}
+/* Row layout for the fencer card: keep name at the left and compact details to the right */
+.fencer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  width: 100%;
+}
+.fencer-left { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
+.fencer-name { font-weight: 800; font-size: 1.02rem; display: flex; gap: 8px; align-items: baseline; white-space: nowrap; overflow: hidden; }
+.fencer-lastname { letter-spacing: 0.6px; font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: uppercase; }
+.fencer-firstname { font-weight: 600; color: rgba(255,255,255,0.95); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; text-transform: none; }
+.fencer-meta {
+  font-size: 0.86rem;
+  opacity: 0.95;
+  color: rgba(255,255,255,0.95);
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+/* Right-aligned action buttons on each fencer card */
+.fencer-card .card-actions {
+  display: flex;
+  flex-direction: row; /* horizontal buttons */
+  gap: 12px; /* slightly more space between action buttons */
+  margin-left: auto; /* push to the right edge */
+  flex: 0 0 auto;
+  align-items: center;
+}
+
+/* Card action buttons reuse the frutiger-aero visuals by setting a `--hue`.
+   Keep button visuals minimal here and rely on the shared frutiger styles. */
+.fencer-card .card-action {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  line-height: 1;
+  min-width: 0;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.28);
+  /* default frutiger variables (fall back if none set) */
+  --sat: 0.22;
+  --glow-intensity: 0.45;
+  --bg: oklch(75% var(--sat) var(--hue, 200deg) / 0.8);
+  --bg-dark: oklch(45% var(--sat) var(--hue, 200deg) / 0.75);
+  --bottom-glow: radial-gradient(farthest-corner at bottom center, rgba(255,255,255,var(--glow-intensity)), transparent);
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg));
+  border: 1px solid var(--bg);
+  color: white;
+  text-shadow: 0 2px 0.5em rgba(0,0,0,0.2);
+  transition: transform 160ms ease, box-shadow 220ms ease;
+  /* Only animate box-shadow for glow; avoid moving the button on hover/focus */
+  transition: box-shadow 220ms ease, background 160ms ease;
+}
+
+/* Specific hues: right-most action uses orange; last action uses green */
+.fencer-card .card-action.info-btn { --hue: 33; }
+.fencer-card .card-action.remove-btn { --hue: 360; }
+
+/* Make the remove 'X' more legible: slightly larger and bolder white glyph */
+.fencer-card .card-action.remove-btn {
+  font-weight: 800;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: white; /* ensure the X is high-contrast */
+}
+
+.fencer-card .card-action:hover {
+  /* Keep only the white glow on hover; do not translate/scale the button */
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65);
+  outline: none;
+}
+
+/* Ensure keyboard focus shows the same white outline/glow as other buttons */
+.fencer-card .card-action:focus,
+.fencer-card .card-action:focus-visible {
+  outline: none;
+  /* Only show the glow on keyboard focus; do not move the element */
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 34px rgba(255,255,255,0.55);
+}
+
+/* Checked state: make the remove button green with the check glyph */
+.fencer-card .card-action.remove-btn.checked {
+  --hue: 140; /* green */
+}
+ 
+
+/* Transient add-fencer area: appears under the checkin bar when invoked */
+.add-fencer-area {
+  /* Position will be computed by JS so the add-card appears directly
+     underneath the fixed `.checkin-bar`. Keep minimal visual rules here. */
+  position: fixed;
+  z-index: 995;
+  pointer-events: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-start;
+  left: auto;
+  right: auto;
+  width: auto;
+}
+
+/* (Check-in All removed) - previous styles removed */
+.add-fencer-area .add-fencer-card {
+  box-sizing: border-box;
+  display: block;
+  /* Keep the glass aesthetic but start the card compact on the right side.
+     Use `width:auto` with a max-width so the card lines up with the Confirm
+     button; it will expand naturally if content forces it. */
+  padding: 18px 24px;
+  border-radius: 20px;
+  width: auto;
+  max-width: 620px; /* compact by default to shorten the right side (slightly longer) */
+  background: radial-gradient(
+    circle at top left,
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0.1)
+  );
+  backdrop-filter: blur(20px) saturate(200%) contrast(130%);
+  -webkit-backdrop-filter: blur(60px) saturate(300%) contrast(130%);
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow:
+    inset 0 0 40px rgba(255,255,255,0.08),
+    0 4px 20px rgba(0,0,0,0.2);
+}
+/* Allow smooth width transitions when the add-card shrinks/expands */
+.add-fencer-area .add-fencer-card {
+  /* Animation variables for tuning smoothness (matches search control feel) */
+  --add-card-shrink-duration: 320ms;
+  --add-card-easing: cubic-bezier(.16,1,.3,1);
+  --add-card-compact-width: 320px;
+
+  transition: width var(--add-card-shrink-duration) var(--add-card-easing),
+              box-shadow calc(var(--add-card-shrink-duration) / 1.6) var(--add-card-easing);
+  will-change: width, box-shadow;
+  overflow: visible; /* overridden inline during animation to hide overflow */
+  position: relative; /* contain overlay mask */
+}
+
+/* Inner wrapper to animate transforms (GPU-friendly). We will animate
+   translateX on this inner element so the visual right edge slides in
+   without causing layout reflows. */
+.add-fencer-area .add-fencer-inner {
+  display: block;
+  transition: transform var(--add-card-shrink-duration) var(--add-card-easing);
+  transform-origin: right center;
+  will-change: transform;
+  /* promote to its own layer to ensure the transform is GPU-accelerated */
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}
+.add-fencer-area .add-fencer-inner.shrinking {
+  transform: translateX(30%); /* will be adjusted by JS if needed */
+}
+
+/* GPU-friendly mask-based shrink: animate clip-path instead of width to avoid
+   layout reflows and achieve a smoother transition similar to the search button. */
+.add-fencer-area .add-fencer-card.shrink-mask {
+  will-change: clip-path, box-shadow;
+  /* Use the same duration/easing variables; the clip-path uses a CSS var
+     --shrink-percent which the JS will update from 0 -> n% */
+  transition: clip-path var(--add-card-shrink-duration) var(--add-card-easing),
+              box-shadow calc(var(--add-card-shrink-duration) / 1.6) var(--add-card-easing);
+  clip-path: inset(0 var(--shrink-percent, 0%) 0 0);
+  overflow: hidden;
+  /* promote to its own layer for smoother animations */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  backface-visibility: hidden;
+}
+
+/* Right-side overlay mask used to slide in and visually "shrink" the card.
+   This is transform-based (translateX) and GPU-friendly across browsers. */
+.add-fencer-area .add-fencer-card .shrink-overlay {
+  position: absolute;
+  inset: 0 0 0 0; /* cover full card */
+  pointer-events: none;
+  transform: translateX(100%); /* start off to the right */
+  transition: transform var(--add-card-shrink-duration) var(--add-card-easing);
+  /* match the card background roughly so it appears to slide the right edge in */
+  background: linear-gradient(90deg, rgba(0,0,0,0.0), rgba(0,0,0,0.06));
+  border-radius: inherit;
+  will-change: transform, opacity;
+}
+.add-fencer-area .add-fencer-card .shrink-overlay.active {
+  transform: translateX(0%);
+}
+
+/* Placeholder styling for the add-card editable fields */
+.add-fencer-card [contenteditable][data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: rgba(255,255,255,0.78);
+  opacity: 0.95;
+  pointer-events: none;
+  display: inline-block;
+}
+.add-fencer-card .fencer-fullname { font-weight: 800; font-size: 1.12rem; display: block; white-space: normal; overflow-wrap: anywhere; padding: 4px 0; }
+.add-fencer-card .meta-rows { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
+.add-fencer-card .meta-row { display: block; }
+.add-fencer-card .meta-part { display: block; font-size: 1.02rem; font-weight: 600; opacity: 0.95; white-space: normal; word-break: break-word; width: 100%; padding: 6px 8px; border-radius: 8px; background: rgba(255,255,255,0.02); }
+.add-fencer-card .meta-year { min-width: 80px; max-width: 200px; font-weight: 600; }
+.add-fencer-card .meta-rank { min-width: 60px; max-width: 160px; font-weight: 700; }
+.add-fencer-card .meta-club { width: 100%; font-weight: 600; }
+
+/* Confirm button: reuse the global frutiger-aero-button visuals and set a green hue */
+.add-fencer-card .frutiger-aero-button.confirm-btn {
+  /* Only set the hue so it uses the exact same visuals as other frutiger buttons */
+  --hue: 140;
+}
+
+/* Remove focus/hover outlines on the add-card editable fields to avoid the
+   default browser ring/highlight — the card already shows a subtle background. */
+.add-fencer-card [contenteditable]:focus {
+  outline: none !important;
+  box-shadow: none !important;
+}
+.add-fencer-card .meta-part:hover,
+.add-fencer-card .fencer-fullname:hover {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Invalid state for required inputs: turn text and border reddish */
+.add-fencer-card .input-invalid {
+  /* Invalid state: change text to red only (no glow or border) */
+  color: #ff6b6b !important;
+  border: none !important;
+  box-shadow: none !important;
+  transition: color 160ms ease;
+}
+
+/* Also style the placeholder pseudo-element when the element is empty */
+.add-fencer-card .input-invalid[data-placeholder]:empty::before {
+  color: #ff6b6b !important;
+  opacity: 1 !important;
+}
+
+/* Highlight animation for a promoted/found card */
+.fencer-card.promote {
+  animation: promote-pulse 1400ms cubic-bezier(.2,.9,.18,1) forwards;
+}
+@keyframes promote-pulse {
+  0% {
+    box-shadow: inset 0 0 24px rgba(255,255,255,0.06), 0 6px 18px rgba(0,0,0,0.22);
+  }
+  30% {
+    box-shadow: 0 14px 42px rgba(255,255,220,0.16), 0 16px 56px rgba(0,0,0,0.28);
+  }
+  60% {
+    box-shadow: 0 8px 26px rgba(255,255,255,0.08), 0 10px 30px rgba(0,0,0,0.22);
+  }
+  100% {
+    box-shadow: inset 0 0 24px rgba(255,255,255,0.06), 0 6px 18px rgba(0,0,0,0.22);
+  }
+}
+
+/* Temporary styling for dragged/promoted card: slight scale and glow while animating */
+.fencer-card.promote-drag {
+  z-index: 1100; /* sit above siblings while animating */
+  box-shadow: 0 18px 46px rgba(0,0,0,0.28), 0 8px 20px rgba(255,255,255,0.03) !important;
+  transform-origin: center top;
+}
+.fencer-card.promote-drag::after {
+  /* soft highlight ring */
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 20px;
+  box-shadow: 0 0 20px rgba(255,255,220,0.08);
+  pointer-events: none;
 }
 
 /* Buttons / editable control in the bar: apply to any element using the frutiger-aero-button class
@@ -98,4 +479,20 @@
 .checkin-bar .frutiger-aero-button:focus {
   outline: none;
   box-shadow: 0 0 16px currentColor, 0 0 24px currentColor;
+}
+
+/* Respect reduced motion preferences by disabling transform animations */
+@media (prefers-reduced-motion: reduce) {
+  .fencer-card, .fencer-card * {
+    transition: none !important;
+    animation: none !important;
+  }
+}
+
+/* Responsive fallback: on narrow screens, stack for readability */
+@media (max-width: 760px) {
+  .fencer-row { flex-direction: column; align-items: stretch; gap: 8px; }
+  .fencer-last-first { flex-direction: row; gap: 8px; }
+  .fencer-lastname, .fencer-firstname { flex: 1 1 auto; }
+  .fencer-details { justify-content: space-between; }
 }

@@ -1,6 +1,10 @@
 {% extends "base.html" %}
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='checkin.css') }}">
+<!-- Cards stack populated from imported CSV (localStorage) -->
+<div id="cards-stack" class="cards-stack" aria-live="polite"></div>
+<!-- Transient area where the Add Fencer card will appear when invoked -->
+<div id="add-fencer-area" class="add-fencer-area" aria-hidden="true"></div>
 
 <div class="checkin-bar">
   <button class="frutiger-aero-button">Remove Fencer</button>

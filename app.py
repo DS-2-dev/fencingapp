@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, render_template, redirect, url_for
 
 app = Flask(__name__)
 
@@ -29,6 +29,13 @@ def pools():
 @app.route('/de')
 def de():
     return render_template('de.html', title="DE")
+
+
+@app.route('/continue')
+def cont():
+    # Continue/resume tournament — redirect to checkin where imported data (localStorage)
+    # is read client-side so the user doesn't need to re-import.
+    return redirect(url_for('checkin'))
 
 if __name__ == '__main__':
     app.run(debug=True)

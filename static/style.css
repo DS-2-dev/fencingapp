@@ -1,5 +1,6 @@
 body {
-  background-image: url("https://luciellong.com/wp-content/uploads/2024/03/art-peinture-tableau-escrime-epee-sport-jo-paris-2024.jpg");
+  background-color: #3a4874b0;
+  /*url(https://luciellong.com/wp-content/uploads/2021/09/tableau-peinture-escrime-sport-art-jeux-olympiques-tokyo-medaille-or.jpg); */
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
@@ -134,7 +135,7 @@ body {
   bottom: 0; left: 0; right: 0;
   height: 40%;
   background: linear-gradient(to top, rgba(255,255,255,0.25), transparent);
-  pointer-events: none;
+  pointer-events: auto;
   border-radius: inherit;
 }
 
@@ -294,12 +295,9 @@ body {
 
 /* Match home button hover glow to menu bar style */
 .frutiger-aero-button:hover {
-  /* Keep the original background/gradient and only add the glow on hover. */
-  box-shadow: 0 0 16px currentColor, 0 0 24px currentColor;
+  /* Keep the original background/gradient and only add the glow on hover.
+     Use a white glow to match the app-wide frutiger button style. */
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65);
   transform: none; /* remove the lift effect */
-}
-
-.nav-btn {
-  color: white; /* force white glow */
 }
 

@@ -1,5 +1,5 @@
-.summary-card {
-  width: 30%;                    
+.date-card {
+  width: 30%;
   margin: 30px auto;             
   padding: 20px 40px;            
   height: 50px;       
@@ -30,3 +30,4 @@
   transition: width 0.3s ease;
   transform-origin: left center;
 }
+

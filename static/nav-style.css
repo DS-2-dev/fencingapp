@@ -353,9 +353,14 @@
 
 
 .nav-btn:hover {
-  /* Show glow only; don't override the button background. Use currentColor so the
-     glow matches the button text color (typically white). */
-  box-shadow: 0 0 16px currentColor, 0 0 24px currentColor;
+  /* Use the same white glow as other frutiger buttons for consistency. */
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65);
+}
+
+/* Active state: indicate the current page. Match hover glow but keep it persistent. */
+.nav-btn.active {
+  box-shadow: 0 0 18px currentColor, 0 0 30px currentColor;
+  transform: translateZ(0) scale(1.02);
 }
 
 
