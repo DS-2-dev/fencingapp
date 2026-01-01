@@ -23,19 +23,299 @@
 
   position: fixed;
   top: calc(30px + 80px);
-  left: 106px; /* align with nav area using a fixed offset */
+  left: calc(2.5% + 40px);
+  transform: none;
   z-index: 999;
   /* Never allow the fixed bar to cause horizontal overflow: cap its width
     relative to the viewport minus the left offset. Keeps layout stable. */
   max-width: calc(100% - 120px);
 
-  transition: width 0.3s ease;
+  transition: width var(--search-bar-duration, 300ms) ease;
   transform-origin: left center;
+}
+
+/* Seeding bar: standalone glass/card visual matching the checkin bar style
+   but implemented as its own component (not mixed with `.checkin-bar`),
+   and without width/transform transitions so it cannot expand/collapse. */
+.seeding-bar {
+  /* Duplicate checkin bar visuals (height/padding/etc.) but extended to the right
+    so buttons have ample horizontal space and do not vertically squish. */
+  width: 56%;
+  margin: 30px auto;
+  padding: 20px 40px;
+  height: 50px;
+  border-radius: 20px;
+  background: radial-gradient(
+    circle at top left,
+    rgba(255,255,255,0.3),
+    rgba(255,255,255,0.1)
+  );
+  backdrop-filter: blur(20px) saturate(200%) contrast(130%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%) contrast(130%);
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow:
+    inset 0 0 40px rgba(255,255,255,0.08),
+    0 4px 20px rgba(0,0,0,0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: row;
+  gap: 20px;
+
+  position: fixed;
+  top: calc(30px + 80px);
+  left: calc(2.5% + 40px);
+  transform: none;
+  z-index: 999;
+  /* Never allow the fixed bar to cause horizontal overflow */
+  max-width: calc(100% - 120px);
+
+  /* keep card stable: don't animate width/transform */
+  transition: none;
+}
+
+/* Pools bar: same glass/card visual matching seeding and checkin bars,
+   extended width to accommodate six buttons with comfortable spacing. */
+.pools-bar {
+  /* Match seeding bar styling but wider for additional buttons */
+  width: 68%;
+  margin: 30px auto;
+  padding: 20px 40px;
+  height: 50px;
+  border-radius: 20px;
+  background: radial-gradient(
+    circle at top left,
+    rgba(255,255,255,0.3),
+    rgba(255,255,255,0.1)
+  );
+  backdrop-filter: blur(20px) saturate(200%) contrast(130%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%) contrast(130%);
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow:
+    inset 0 0 40px rgba(255,255,255,0.08),
+    0 4px 20px rgba(0,0,0,0.2);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: row;
+  gap: 16px;
+
+  position: fixed;
+  top: calc(30px + 80px);
+  left: calc(2.5% + 40px);
+  transform: none;
+  z-index: 999;
+  /* Never allow the fixed bar to cause horizontal overflow */
+  max-width: calc(100% - 120px);
+
+  /* keep card stable: don't animate width/transform */
+  transition: none;
+}
+
+/* Pools output: similar layout to seeding */
+.pools-area {
+  position: fixed;
+  top: calc(30px + 80px + 130px);
+  /* nudged slightly to the right to align with updated layout */
+  left: calc(2.5% + 80px);
+  right: 40px;
+  bottom: 20px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  padding: 12px 12px 36px 0;
+  -webkit-overflow-scrolling: touch;
+}
+
+.pools-output {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px;
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+  padding-right: 0;
+}
+
+@media (max-width: 1080px) {
+  .pools-output { grid-template-columns: 1fr; }
+}
+
+/* Seeding output: two columns of pools laid out below the seeding bar */
+
+.seeding-area {
+  position: fixed;
+  top: calc(30px + 80px + 130px); /* increased vertical gap beneath the seeding bar */
+  left: calc(2.5% + 40px);
+  /* extend the right edge slightly so hover translations have room
+     without causing visual layout shifts — keeps appearance unchanged */
+  right: 0;
+  bottom: 20px;
+  overflow-y: auto;
+  overflow-x: visible;
+  box-sizing: border-box;
+  /* add invisible right padding buffer so sliding/hover artefacts
+     are not clipped while keeping content visually identical */
+  padding: 20px 56px 36px 0; /* slightly larger right buffer */
+  -webkit-overflow-scrolling: touch;
+}
+
+/* During removal-mode we need to ensure the hover-translate isn't clipped by
+   any ancestor that defaults to hidden overflow. These rules are scoped to the
+   removal-mode states so normal layout is unchanged. */
+.seeding-output.removal-mode,
+.seeding-area.removal-mode,
+.pools-output.removal-mode,
+.pools-area.removal-mode,
+.cards-stack.removal-mode,
+.pool-wrapper.removal-mode,
+.pool-card.removal-mode,
+.pool-list.removal-mode,
+body.removal-mode-active {
+  overflow-x: visible !important;
+  overflow: visible !important;
+}
+
+/* When a card is hovered during removal-mode, raise it above siblings so the
+   visual slide isn't obscured by neighboring elements. */
+.seeding-output.removal-mode .fencer-card:hover,
+.pools-output.removal-mode .fencer-card:hover,
+.cards-stack.removal-mode .fencer-card:hover {
+  z-index: 995; /* above pool cards but below fixed bars (999) */
+  position: relative; /* create stacking context for z-index to work */
+}
+
+.seeding-output {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 24px; /* moderate spacing between pools */
+  width: 100%;
+  max-width: 1200px;
+  box-sizing: border-box;
+  padding-right: 8px;
+}
+
+.pool-wrapper { display: block; margin-bottom: 20px; }
+/* Pool header inputs: avoid visual highlight on hover/focus/click
+   Keep the inputs interactive but remove outlines, glow and background
+   changes so hover-to-type feels seamless like other editable elements. */
+.seeding-output .pool-header input,
+.seeding-output .pool-header input:hover,
+.seeding-output .pool-header input:focus,
+.seeding-output .pool-header input:active,
+.seeding-output .pool-header input:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+  background: transparent !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  color: inherit !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+.seeding-output .pool-header input::-moz-focus-inner { border: 0; }
+.pool-card { width: 100%; padding: 10px 14px; }
+.pool-card .pool-header { padding: 4px 0; }
+.pool-card .pool-title { font-size: 1rem; }
+.pool-list { width: 100%; padding: 6px 0 0 0; }
+
+@media (max-width: 980px) {
+  .seeding-output { grid-template-columns: 1fr; }
+}
+
+/* Button sizing inside seeding bar: give more room and comfortable padding */
+.seeding-bar .frutiger-aero-button {
+  /* Match Check-in card button sizing: not bold, same padding and size */
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-weight: 500; /* avoid bold */
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px; /* keep comfortable label space */
+  white-space: nowrap;
+}
+
+/* Button sizing inside pools bar: same as seeding bar */
+.pools-bar .frutiger-aero-button {
+  padding: 10px 20px;
+  border-radius: 30px;
+  font-weight: 500;
+  font-size: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 120px;
+  white-space: nowrap;
+}
+
+/* Increased padding/length for specific pools buttons */
+.pools-bar .move-fencer-btn,
+.pools-bar .advancement-btn,
+.pools-bar .connect-device-btn {
+  padding: 10px 28px;
+  min-width: 150px;
+}
+
+/* Extra padding for Connect Device */
+.pools-bar .connect-device-btn {
+  padding: 10px 34px;
+  min-width: 165px;
+}
+
+/* Custom hues requested: light blue for Custom, yellow for Move Fencer. */
+.randomize-btn { --hue: 320; --sat: 0.22; } /* magenta */
+.custom-btn { --hue: 210; --sat: 0.22; }
+.move-fencer-btn { --hue: 60; --sat: 0.22; }
+.move-fencer-btn.active {
+  /* Match the clean white glow used on other active buttons */
+  box-shadow: 0 0 18px rgba(255,255,255,0.92), 0 0 30px rgba(255,255,255,0.38);
+  border-color: rgba(255,255,255,0.32);
+  filter: none;
+}
+
+/* Pools bar button colors */
+.pool-btn { --hue: 280; --sat: 0.22; } /* purple */
+.advancement-btn { --hue: 30; --sat: 0.22; } /* orange */
+.advancement-btn:hover {
+  box-shadow: none;
+  transform: none;
+  cursor: auto !important;
+}
+.connect-device-btn { --hue: 180; --sat: 0.22; } /* cyan */
+
+.save-btn { --hue: 140; --sat: 0.22; } /* green */
+.save-btn:active { transform: none; }
+
+/* Save button disabled state: gray and non-clickable until changes are made */
+.save-btn:disabled,
+.save-btn.disabled {
+  --sat: 0 !important;
+  --hue: 0deg !important;
+  --bg: oklch(68% 0 0 / 0.92) !important;
+  --bg-dark: oklch(48% 0 0 / 0.90) !important;
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg)) !important;
+  background-color: var(--bg) !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  box-shadow: none !important;
+  color: rgba(255,255,255,0.92) !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+/* Enforce width even if descendants change state (safety for :has rules) */
+/* Allow all buttons to size naturally within the wider bar (no fixed widths) */
+
+
+/* Global card animation duration variable so JS and CSS can stay in sync */
+:root {
+  --card-duration: 520ms;
+  --search-bar-duration: 300ms;
 }
 
 /* Cards stack above the checkin bar */
 .cards-stack {
   /* Position the cards underneath the fixed checkin bar so they appear stacked below it */
+  /* Restore original width so cards have the longer length users prefer */
   width: 40%;
   position: fixed;
   /* place below the menu + checkin bar (menu ~30px + 80px, checkin-bar approx 50px) */
@@ -51,6 +331,8 @@
   z-index: 990; /* sit under the checkin bar (which is 999) */
   overflow-y: auto;
   overflow-x: hidden;
+  /* Provide a small left inset so hover translations have room without clipping */
+  padding-left: 12px;
   padding-right: 20px;
   scrollbar-gutter: stable both-edges;
   /* Constrain vertically by anchoring to bottom so the container can scroll when
@@ -58,27 +340,121 @@
      and losing the scrollbar. */
   bottom: 20px;
 }
+.cards-stack.removal-mode {
+  /* Allow horizontal visual affordances (slight left poke) to be visible */
+  overflow-x: visible;
+}
 
 /* Removal mode styles: when active, hovering a card makes it visually solid and clickable */
 .cards-stack.removal-mode .fencer-card {
-  /* Only change background/color/border on hover — no rise or extra shadow */
-  transition: background 160ms ease, border-color 160ms ease, color 160ms ease;
+  /* Only change background/color/border on hover — add subtle left poke */
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
 .cards-stack.removal-mode .fencer-card:hover {
-   backdrop-filter: blur(200px) saturate(400%) contrast(130%);
+  backdrop-filter: blur(200px) saturate(400%) contrast(130%);
   -webkit-backdrop-filter: blur(200px) saturate(300%) contrast(130%);
   border: 1px solid rgba(255,255,255,0.35);
   box-shadow:
     inset 0 0 40px rgba(255,255,255,0.08),
     0 4px 20px rgba(0,0,0,0.2);
-  
+  transform: translateX(-8px);
   cursor: pointer;
 }
 
-/* Visual state for active Remove button */
-.checkin-bar .frutiger-aero-button.remove-active,
-.checkin-bar .frutiger-aero-button.remove-active,
-body.removal-mode-active .checkin-bar .frutiger-aero-button:first-child {
+/* Move mode drag affordances */
+body.move-mode-active .pool-list .fencer-card {
+  cursor: grab;
+}
+body.move-mode-active .pool-list .fencer-card:active {
+  cursor: grabbing;
+}
+body.move-mode-active .pool-list .fencer-card.drag-over,
+body.move-mode-active .pool-list.drag-over {
+  border: 1px dashed rgba(255, 255, 255, 0.35);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.16);
+}
+body.move-mode-active .pool-list .fencer-card.dragging {
+  opacity: 0.9;
+  background: radial-gradient(
+    circle at top left,
+    rgba(255,255,255,0.3),
+    rgba(255,255,255,0.08)
+  );
+  backdrop-filter: blur(18px) saturate(180%) contrast(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%) contrast(120%);
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow: inset 0 0 24px rgba(255,255,255,0.06), 0 6px 18px rgba(0,0,0,0.22);
+}
+
+/* Seeding removal mode: mirror check-in hover affordance so cards slide left */
+.seeding-output.removal-mode {
+  /* Allow slight horizontal translation to be visible */
+  overflow-x: visible;
+}
+.seeding-output.removal-mode .pool-list .fencer-card {
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+.seeding-output.removal-mode .pool-list .fencer-card:hover {
+  transform: translateX(-8px);
+  backdrop-filter: blur(200px) saturate(400%) contrast(130%);
+  -webkit-backdrop-filter: blur(200px) saturate(300%) contrast(130%);
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow:
+    inset 0 0 40px rgba(255,255,255,0.08),
+    0 4px 20px rgba(0,0,0,0.2);
+  cursor: pointer;
+}
+
+/* Pools move mode: similar hover affordance for fencer lanes */
+.pools-output.move-mode {
+  overflow-x: visible;
+}
+.pools-output.move-mode .fencer-lane {
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+  cursor: pointer;
+}
+.pools-output.move-mode .fencer-lane:hover {
+  transform: translateX(-8px);
+  backdrop-filter: blur(200px) saturate(400%) contrast(130%);
+  -webkit-backdrop-filter: blur(200px) saturate(300%) contrast(130%);
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow:
+    inset 0 0 40px rgba(255,255,255,0.08),
+    0 4px 20px rgba(0,0,0,0.2);
+}
+
+/* Active glow state for the universal Remove button when removal mode is on */
+.remove-copy-btn.remove-active {
+  box-shadow: 0 0 18px rgba(255,255,255,0.92), 0 0 30px rgba(255,255,255,0.38);
+  border-color: rgba(255,255,255,0.32);
+  filter: none;
+}
+
+/* Active glow state for Move Fencer button when move mode is on */
+.move-fencer-btn.move-active {
+  box-shadow: 0 0 18px rgba(255,255,255,0.92), 0 0 30px rgba(255,255,255,0.38);
+  border-color: rgba(255,255,255,0.32);
+  filter: none;
+}
+.drag-ghost {
+  pointer-events: none;
+  opacity: 0.92;
+  background: radial-gradient(
+    circle at top left,
+    rgba(255,255,255,0.3),
+    rgba(255,255,255,0.08)
+  );
+  backdrop-filter: blur(18px) saturate(180%) contrast(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%) contrast(120%);
+  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow: inset 0 0 24px rgba(255,255,255,0.06), 0 6px 18px rgba(0,0,0,0.22);
+  border-radius: 20px;
+}
+
+/* Visual state for active Remove button (nav copy only) */
+/* Only the universal-nav remove copy should show the removal-mode glow. */
+.remove-copy-btn.remove-active,
+body.removal-mode-active .remove-copy-btn {
   /* Keep a clear white glow/outline when active to indicate removal mode */
   outline: none;
   /* bright white outer glow plus softer ring for depth */
@@ -227,12 +603,14 @@ body.removal-mode-active .checkin-bar .frutiger-aero-button:first-child {
  
 
 /* Transient add-fencer area: appears under the checkin bar when invoked */
-.add-fencer-area {
-  /* Position will be computed by JS so the add-card appears directly
-     underneath the fixed `.checkin-bar`. Keep minimal visual rules here. */
-  position: fixed;
-  z-index: 995;
-  pointer-events: auto;
+.add-fencer-area,
+#add-fencer-area {
+  --start-w: 220px;
+  --max-w: 300px;
+  /* unified card animation duration — used for fade-in, expand/collapse, modal entry */
+  --card-duration: 520ms;
+  --add-area-duration: var(--card-duration);
+  --add-area-easing: cubic-bezier(.16,1,.3,1);
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -242,17 +620,63 @@ body.removal-mode-active .checkin-bar .frutiger-aero-button:first-child {
   width: auto;
 }
 
+/* Make the pool-list container (which is also given .fencer-card) fully transparent
+   so the list of fencer rows appears on the page without the enclosing card visuals.
+   Do NOT affect the pool header card (.pool-card). */
+.seeding-output .pool-list.fencer-card {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  color: inherit !important;
+}
+
+/* add-area sizing driven by CSS variables. JS sets `--start-w` and
+   `--max-w` on the element; `.add-init` keeps the area at the start
+   width until the user hovers (which toggles `.add-hover`). This avoids
+   inline !important style toggles that caused layout flicker. */
+.add-fencer-area,
+#add-fencer-area {
+  --start-w: 220px;
+  --max-w: 300px;
+  /* Use a longer, card-centered duration so the add-card expands more slowly */
+  --add-area-duration: var(--card-duration, 520ms);
+  --add-area-easing: cubic-bezier(.16,1,.3,1);
+  width: var(--start-w);
+  max-width: var(--start-w);
+  transition: width var(--add-area-duration) var(--add-area-easing), max-width var(--add-area-duration) var(--add-area-easing);
+}
+.add-fencer-area.add-hover,
+#add-fencer-area.add-hover {
+  width: var(--max-w);
+  max-width: var(--max-w);
+}
+.add-fencer-area:hover,
+#add-fencer-area:hover {
+  /* Ensure hovering anywhere inside the add-area expands the container
+     even if some descendants handle pointer events. This keeps the visual
+     expansion purely CSS-driven and avoids race conditions between JS
+     event handlers and browser hover semantics. */
+  width: var(--max-w);
+  max-width: var(--max-w);
+}
+.add-fencer-area.add-init,
+#add-fencer-area.add-init {
+  width: var(--start-w) !important;
+  max-width: var(--start-w) !important;
+}
+
 /* (Check-in All removed) - previous styles removed */
 .add-fencer-area .add-fencer-card {
   box-sizing: border-box;
   display: block;
-  /* Keep the glass aesthetic but start the card compact on the right side.
-     Use `width:auto` with a max-width so the card lines up with the Confirm
-     button; it will expand naturally if content forces it. */
+  /* Make the inner card match the container width so the container's
+    CSS-driven width correctly constrains the visible card. */
   padding: 18px 24px;
   border-radius: 20px;
-  width: auto;
-  max-width: 620px; /* compact by default to shorten the right side (slightly longer) */
+  width: 100%;
+  max-width: 100%;
   background: radial-gradient(
     circle at top left,
     rgba(255, 255, 255, 0.3),
@@ -265,12 +689,61 @@ body.removal-mode-active .checkin-bar .frutiger-aero-button:first-child {
     inset 0 0 40px rgba(255,255,255,0.08),
     0 4px 20px rgba(0,0,0,0.2);
 }
+
+/* Fade-in animation for the transient add-fencer card */
+.add-fencer-area .add-fencer-card.fade-enter {
+  opacity: 0;
+  /* start slightly to the left so it glides in horizontally */
+  transform: translateX(-18px) scale(0.992);
+  will-change: opacity, transform;
+}
+.add-fencer-area .add-fencer-card.fade-enter-active {
+  opacity: 1;
+  transform: translateX(0) scale(1);
+  transition: opacity var(--card-duration) var(--add-area-easing), transform var(--card-duration) var(--add-area-easing);
+}
+
+/* Respect users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .add-fencer-area .add-fencer-card.fade-enter,
+  .add-fencer-area .add-fencer-card.fade-enter-active {
+    transition: none !important;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}
+/* Style for the in-bar Check-in All button: dark green visual matching frutiger buttons */
+.checkin-all-btn {
+  /* Use the same OKLCH variable pattern as other nav buttons so colors
+     are consistent across the UI. Ensure hue is an explicit angle. */
+  --hue: 140deg; /* green */
+  --sat: 0.22;
+  --glow-intensity: 0.45;
+  --bg: oklch(75% var(--sat) var(--hue) / 0.8);
+  --bg-dark: oklch(45% var(--sat) var(--hue) / 0.75);
+  --bottom-glow: radial-gradient(farthest-corner at bottom center, rgba(255,255,255,var(--glow-intensity)), transparent);
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg));
+  border: 1px solid var(--bg);
+  color: white;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.36);
+  padding: 12px 20px;
+  border-radius: 30px;
+  font-weight: 700;
+  transition: transform 180ms ease, box-shadow 220ms ease, filter 200ms ease;
+}
+
+/* Brief active feedback when Check-in All is pressed/programmatically activated */
+.checkin-all-btn.active {
+  transform: translateY(1px) scale(0.995);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.42), 0 0 18px rgba(20,90,50,0.08) inset;
+  filter: brightness(0.98);
+}
 /* Allow smooth width transitions when the add-card shrinks/expands */
 .add-fencer-area .add-fencer-card {
   /* Animation variables for tuning smoothness (matches search control feel) */
-  --add-card-shrink-duration: 320ms;
-  --add-card-easing: cubic-bezier(.16,1,.3,1);
-  --add-card-compact-width: 320px;
+  --add-card-shrink-duration: var(--add-area-duration, 240ms);
+  --add-card-easing: var(--add-area-easing, cubic-bezier(.16,1,.3,1));
+  --add-card-compact-width: 600px;
 
   transition: width var(--add-card-shrink-duration) var(--add-card-easing),
               box-shadow calc(var(--add-card-shrink-duration) / 1.6) var(--add-card-easing);
@@ -328,6 +801,81 @@ body.removal-mode-active .checkin-bar .frutiger-aero-button:first-child {
   transform: translateX(0%);
 }
 
+/* Modal overlay for seeding confirmation */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.48);
+  backdrop-filter: blur(6px) saturate(120%);
+  display: flex;
+  align-items: flex-start; /* slide from top */
+  justify-content: center;
+  padding-top: 80px;
+  z-index: 1200;
+  opacity: 0;
+  transition: opacity var(--card-duration, 520ms) cubic-bezier(.16,1,.3,1);
+}
+.modal-overlay.modal-active { opacity: 1; }
+
+.modal-card {
+  /* Slightly narrower so the right edge doesn't feel too distant from text.
+     Use a smaller cap to preserve the left text-to-border spacing visually. */
+  width: min(730px, calc(100% - 64px));
+  max-width: 92%;
+  transform: translateY(-18px);
+  opacity: 0;
+  transition: transform var(--card-duration, 520ms) cubic-bezier(.16,1,.3,1), opacity var(--card-duration, 520ms) cubic-bezier(.16,1,.3,1);
+  /* Make the modal card visually match the glassy nav/menu bar */
+  background: radial-gradient(
+    circle at top left,
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0.1)
+  );
+  backdrop-filter: blur(20px) saturate(200%) contrast(130%);
+  -webkit-backdrop-filter: blur(60px) saturate(300%) contrast(130%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    inset 0 0 40px rgba(255,255,255,0.08),
+    0 4px 20px rgba(0,0,0,0.2);
+  border-radius: 18px;
+  /* equalize left/right padding so the text sits balanced inside the card */
+  padding: 20px 20px;
+}
+.modal-card.fade-enter {
+  opacity: 0;
+  transform: translateY(-18px);
+  will-change: opacity, transform;
+}
+.modal-card.fade-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: transform var(--card-duration, 520ms) cubic-bezier(.16,1,.3,1), opacity var(--card-duration, 520ms) cubic-bezier(.16,1,.3,1);
+}
+/* Explicitly define exit classes so fade-out matches fade-in duration */
+.modal-card.fade-exit {
+  opacity: 1;
+  transform: translateY(0);
+  will-change: opacity, transform;
+}
+.modal-card.fade-exit-active {
+  opacity: 0;
+  transform: translateY(-18px);
+  transition: transform var(--card-duration, 520ms) cubic-bezier(.16,1,.3,1), opacity var(--card-duration, 520ms) cubic-bezier(.16,1,.3,1);
+}
+.modal-card.fade-enter-active { transform: translateY(0); opacity: 1; }
+
+.modal-card .fencer-left { gap: 10px; }
+.modal-card .fencer-name span { font-size: 1.12rem; font-weight: 800; }
+
+/* Constrain inner content so the right-side text distance matches left-side spacing */
+.modal-card .fencer-left {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Slightly de-emphasize background content when modal open */
+body.modal-open { overflow: hidden; }
+
 /* Placeholder styling for the add-card editable fields */
 .add-fencer-card [contenteditable][data-placeholder]:empty::before {
   content: attr(data-placeholder);
@@ -336,18 +884,186 @@ body.removal-mode-active .checkin-bar .frutiger-aero-button:first-child {
   pointer-events: none;
   display: inline-block;
 }
-.add-fencer-card .fencer-fullname { font-weight: 800; font-size: 1.12rem; display: block; white-space: normal; overflow-wrap: anywhere; padding: 4px 0; }
+
+/* Add-fencer modal specific styles */
+.modal-card.add-fencer-modal {
+  width: min(730px, calc(100% - 64px));
+  max-width: 92%;
+  padding: 20px 24px;
+  box-sizing: border-box;
+}
+.modal-card.add-fencer-modal .input-row {
+  display: block;
+  margin-top: 12px;
+}
+.modal-card.add-fencer-modal .input-label {
+  font-size: 0.95rem;
+  opacity: 0.95;
+  margin-bottom: 6px;
+}
+.modal-card.add-fencer-modal [contenteditable][data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: rgba(255,255,255,0.6);
+  opacity: 0.95;
+}
+/* Make modal fields look like boxed text inputs (visible box rather than bare line) */
+.modal-card.add-fencer-modal .fencer-fullname {
+  display: block;
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(255,255,255,0.08);
+  min-height: 44px;
+  color: white;
+  font-size: 1.06rem;
+  font-weight: 800;
+  box-sizing: border-box;
+}
+.modal-card.add-fencer-modal .fencer-fullname[data-placeholder]:empty::before {
+  content: attr(data-placeholder);
+  color: rgba(255,255,255,0.65);
+}
+.modal-card.add-fencer-modal .fencer-fullname:hover,
+.modal-card.add-fencer-modal .fencer-fullname:focus {
+  border-color: rgba(255,255,255,0.18);
+  box-shadow: 0 6px 18px rgba(255,255,255,0.04);
+}
+
+.modal-card.add-fencer-modal .meta-rows {
+  display: flex;
+  flex-direction: row;
+  gap: 12px;
+  margin-top: 6px; /* reduced spacing between name row and meta rows */
+  align-items: center;
+}
+.modal-card.add-fencer-modal .meta-row { flex: 0 0 auto; }
+.modal-card.add-fencer-modal .meta-part {
+  display: inline-block;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.06);
+  color: white;
+  font-size: 0.98rem;
+  min-height: 36px;
+  box-sizing: border-box;
+  /* Prevent width changes: we'll set inline width/min/max from JS */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.modal-card.add-fencer-modal .meta-year { width: 140px; }
+.modal-card.add-fencer-modal .meta-rank { width: 18ch; }
+.modal-card.add-fencer-modal .meta-club { width: 354px}
+.modal-card.add-fencer-modal .meta-pool { width: 70px; }
+.modal-card.add-fencer-modal .meta-part[data-placeholder]:empty::before { content: attr(data-placeholder); color: rgba(255,255,255,0.65); }
+.modal-card.add-fencer-modal .meta-part:hover,
+.modal-card.add-fencer-modal .meta-part:focus {
+  border-color: rgba(255,255,255,0.18);
+  box-shadow: 0 6px 18px rgba(255,255,255,0.03);
+}
+
+/* Make modal editable boxes show the text cursor so user knows they can type on hover */
+.modal-card.add-fencer-modal .fencer-fullname,
+.modal-card.add-fencer-modal .meta-part {
+  cursor: text !important;
+}
+
+/* Increase gap between header row and name row for visual separation */
+.modal-card.add-fencer-modal .fencer-left .fencer-name:first-of-type {
+  margin-bottom: 16px;
+}
+.modal-card.add-fencer-modal .input-field {
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.04);
+  min-height: 36px;
+  color: white;
+  font-size: 1rem;
+}
+.modal-card.add-fencer-modal .meta-actions { margin-top: 18px; display:flex; gap:10px; justify-content:flex-end; }
+/* Reduce Add Fencer modal button size to better match seeding modal buttons.
+  Use a slightly smaller padding and font so the buttons don't appear oversized. */
+.modal-card.add-fencer-modal .frutiger-aero-button {
+  /* Explicit balanced height to match seeding modal visually without
+     appearing oversized or undersized. Use a centered inline-flex so
+     text vertically aligns regardless of font metrics. */
+  height: 44px;
+  min-height: 44px;
+  padding: 0 18px; /* horizontal padding only; vertical space provided by height */
+  border-radius: 28px;
+  font-size: 1rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+}
+
+/* Keep focus/typing interactions consistent: show caret and allow typing on hover/focus */
+.modal-card.add-fencer-modal [contenteditable] { outline: none; caret-color: white; }
+.modal-card.add-fencer-modal [contenteditable]:hover { background-color: rgba(255, 255, 255, 0.05); }
+.modal-card.add-fencer-modal [contenteditable]:focus { box-shadow: 0 0 18px rgba(255,255,255,0.06); background-color: rgba(255, 255, 255, 0.08); }
+.add-fencer-card .fencer-fullname { font-weight: 800; font-size: 1.12rem; display: block; white-space: normal; overflow-wrap: anywhere; padding: 4px 0; transition: all 0.2s ease; }
+.add-fencer-card .fencer-fullname:hover { text-shadow: 0 0 12px rgba(255,255,255,0.08); }
+.add-fencer-card .fencer-fullname:focus { text-shadow: 0 0 18px rgba(255,255,255,0.12); }
 .add-fencer-card .meta-rows { display: flex; flex-direction: column; gap: 10px; margin-top: 10px; }
 .add-fencer-card .meta-row { display: block; }
-.add-fencer-card .meta-part { display: block; font-size: 1.02rem; font-weight: 600; opacity: 0.95; white-space: normal; word-break: break-word; width: 100%; padding: 6px 8px; border-radius: 8px; background: rgba(255,255,255,0.02); }
+.add-fencer-card .meta-part { display: block; font-size: 1.02rem; font-weight: 600; opacity: 0.95; white-space: normal; word-break: break-word; width: 100%; padding: 6px 8px; border-radius: 8px; background: rgba(255,255,255,0.02); transition: all 0.2s ease; }
+.add-fencer-card .meta-part:hover { background: rgba(255,255,255,0.06); }
+.add-fencer-card .meta-part:focus { background: rgba(255,255,255,0.08); box-shadow: 0 0 12px rgba(255,255,255,0.06); }
 .add-fencer-card .meta-year { min-width: 80px; max-width: 200px; font-weight: 600; }
 .add-fencer-card .meta-rank { min-width: 60px; max-width: 160px; font-weight: 700; }
 .add-fencer-card .meta-club { width: 100%; font-weight: 600; }
 
 /* Confirm button: reuse the global frutiger-aero-button visuals and set a green hue */
+.add-fencer-card .meta-actions {
+  margin-top: 12px;
+  display: flex;
+  gap: 8px;
+  width: 100%;
+  justify-content: flex-end; /* keep actions aligned to the right edge */
+}
+/* Use a CSS variable for the confirm button width so it can animate
+   in sync with the add-area expansion. The button stays right-aligned
+   (so it moves with the container) and its width animates smoothly. */
 .add-fencer-card .frutiger-aero-button.confirm-btn {
-  /* Only set the hue so it uses the exact same visuals as other frutiger buttons */
-  --hue: 140;
+  --hue: 140deg;
+  --sat: 0.22;
+  --glow-intensity: 0.45;
+  padding: 12px 22px;
+  border-radius: 30px;
+  font-weight: 500; /* match global frutiger button weight */
+  align-self: center;
+  width: var(--confirm-w, 180px);
+  box-sizing: border-box;
+  transition: width var(--add-area-duration, 240ms) var(--add-card-easing, cubic-bezier(.16,1,.3,1)), padding var(--add-area-duration, 240ms) ease, box-shadow 260ms cubic-bezier(.16,1,.3,1), background 260ms ease;
+}
+
+/* Lock child widths so the container controls sizing. Disable width transitions
+   on children to avoid independent textbox resizing that looks out-of-sync. */
+.add-fencer-card [contenteditable],
+.add-fencer-card .meta-part {
+  width: 100% !important;
+  min-width: 0;
+  box-sizing: border-box;
+  transition: none !important;
+}
+
+/* When the add area expands, increase the confirm button's width so it
+   visually grows together with the card. */
+.add-fencer-area.add-hover .add-fencer-card .frutiger-aero-button.confirm-btn,
+#add-fencer-area.add-hover .add-fencer-card .frutiger-aero-button.confirm-btn {
+  --confirm-w: 260px;
+  padding: 12px 26px;
+}
+
+/* Fade-into-glow hover like other frutiger-aero buttons */
+.add-fencer-card .frutiger-aero-button.confirm-btn:hover {
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65);
+  transform: none;
 }
 
 /* Remove focus/hover outlines on the add-card editable fields to avoid the
@@ -411,6 +1127,35 @@ body.removal-mode-active .checkin-bar .frutiger-aero-button:first-child {
   box-shadow: 0 0 20px rgba(255,255,220,0.08);
   pointer-events: none;
 }
+
+/* Expanded detail card that slides in from the left under the checkin bar */
+.fencer-detail-card {
+  position: fixed;
+  width: min(520px, calc(100% - 160px));
+  max-width: 92%;
+  box-sizing: border-box;
+  padding: 16px 18px;
+  border-radius: 16px;
+  background: radial-gradient(circle at top left, rgba(255,255,255,0.28), rgba(255,255,255,0.08));
+  backdrop-filter: blur(18px) saturate(160%) contrast(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(160%) contrast(120%);
+  border: 1px solid rgba(255,255,255,0.22);
+  box-shadow: inset 0 0 24px rgba(255,255,255,0.04), 0 8px 30px rgba(0,0,0,0.28);
+  color: white;
+  z-index: 996;
+  opacity: 0;
+  transform: translateX(-18px);
+  transition: transform var(--card-duration, 520ms) cubic-bezier(.16,1,.3,1), opacity var(--card-duration,520ms) cubic-bezier(.16,1,.3,1);
+}
+.fencer-detail-card.fade-enter-active { opacity: 1; transform: translateX(0); }
+.fencer-detail-card .detail-row { margin: 6px 0; }
+.fencer-detail-card .detail-name { font-size: 1.04rem; display: flex; gap: 8px; align-items: baseline; }
+.fencer-detail-card .detail-last { font-weight: 900; text-transform: uppercase; }
+.fencer-detail-card .detail-first { font-weight: 700; text-transform: none; }
+.fencer-detail-card .detail-meta { font-size: 0.95rem; opacity: 0.95; }
+.fencer-detail-card .detail-meta + .detail-meta { margin-top: 6px; }
+.fencer-detail-card .detail-dot { margin: 0 8px; opacity: 0.9; }
+.fencer-detail-card .detail-close { position: absolute; top: 8px; right: 8px; background: transparent; border: none; color: rgba(255,255,255,0.9); font-size: 1.05rem; cursor: pointer; }
 
 /* Buttons / editable control in the bar: apply to any element using the frutiger-aero-button class
    inside the checkin-bar so a contenteditable element can match the button appearance
@@ -495,4 +1240,533 @@ body.removal-mode-active .checkin-bar .frutiger-aero-button:first-child {
   .fencer-last-first { flex-direction: row; gap: 8px; }
   .fencer-lastname, .fencer-firstname { flex: 1 1 auto; }
   .fencer-details { justify-content: space-between; }
+}
+
+/* Pools score sheet layout */
+.pool-score-wrapper {
+  padding: 4px 0 10px;
+  /* Allow grid to render without an inner horizontal scroller; prefer the 
+     outer page layout to handle overall scrolling. */
+  overflow-x: visible;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
+}
+
+.pool-score-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.pool-score-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.pool-score-meta {
+  font-size: 0.95rem;
+  opacity: 0.75;
+}
+
+.pool-grid {
+  display: grid;
+  gap: 8px 6px;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+}
+
+/* Slightly taller cells for pool fencer rows to improve readability */
+.pool-grid .grid-cell {
+  min-height: 56px; /* increased from 46px */
+}
+
+.grid-cell {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.08);
+  border-radius: 12px;
+  padding: 10px 12px;
+  color: #f4f4f4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 46px;
+  box-shadow: inset 0 0 10px rgba(255,255,255,0.04);
+}
+
+.grid-header-cell {
+  /* Frutiger Aero circular badge for header numbers */
+  --sat: 0.22;
+  --hue: 280deg;
+  --bg: oklch(75% var(--sat) var(--hue) / 0.8);
+  --bg-dark: oklch(45% var(--sat) var(--hue) / 0.75);
+  --glow-intensity: 0.45;
+  
+  box-sizing: border-box;
+  width: 40px;
+  min-width: 40px;
+  height: 40px;
+  min-height: 40px;
+  max-height: 40px;
+  border-radius: 50%;
+  padding: 0;
+  min-height: 0;
+  flex: 0 0 auto;
+  background: radial-gradient(
+    farthest-corner at bottom center,
+    rgba(255, 255, 255, var(--glow-intensity)),
+    transparent
+  ), linear-gradient(to bottom, var(--bg-dark), var(--bg));
+  border: 1px solid var(--bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: center;
+  justify-self: center;
+  line-height: 40px;
+  font-size: 1rem;
+  font-weight: 800;
+  color: white;
+  text-shadow: 0 2px 0.5em rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.grid-header-cell::after {
+  content: "";
+  position: absolute;
+  top: 4%;
+  left: 0.5em;
+  width: calc(100% - 1em);
+  height: 40%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.8),
+    rgba(255, 255, 255, 0.1)
+  );
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Stronger specificity to override the generic pool cell sizing so header
+   badges do not inherit the taller min-height applied to other cells. */
+.pool-grid .grid-header-cell {
+  min-height: 0 !important;
+  height: 42px !important;
+  width: 42px !important;
+  min-width: 42px !important;
+  max-height: 42px !important;
+  padding: 0 !important;
+  flex: 0 0 auto !important;
+  align-self: center !important;
+  justify-self: center !important;
+}
+
+.grid-label {
+  justify-content: flex-start;
+  font-weight: 600;
+  padding-left: 14px;
+  /* Remove the visual "card" for the label while keeping the grid cell
+     so column alignment stays consistent. This hides the header card
+     without affecting layout or accessibility. */
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  color: inherit;
+  min-height: 0;
+  padding-top: 6px;
+  padding-bottom: 6px;
+}
+
+.fencer-lane {
+  display: flex;
+  justify-content: flex-start;
+  gap: 0;
+  padding: 6px 8px;
+}
+
+/* Make each fencer row in the pool look like the other fencer cards: glassy
+   background, subtle border and depth so they visually match the check-in
+   card style used across the app. Kept lightweight to fit inside grid cells. */
+.pool-grid .fencer-lane {
+  background: radial-gradient(
+    circle at top left,
+    rgba(255,255,255,0.22),
+    rgba(255,255,255,0.06)
+  );
+  backdrop-filter: blur(14px) saturate(160%) contrast(115%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%) contrast(115%);
+  border: 1px solid rgba(255,255,255,0.18);
+  box-shadow: inset 0 0 18px rgba(255,255,255,0.04), 0 6px 14px rgba(0,0,0,0.18);
+  border-radius: 14px;
+  color: #fff;
+}
+
+/* Removal-mode hover slide and fade animation to match seeding/checkin behavior */
+/* Support removal-mode when class is applied either to the pool-grid or the outer #pools-output container. */
+.pool-grid.removal-mode .fencer-lane:hover,
+#pools-output.removal-mode .fencer-lane:hover {
+  transform: translateX(-8px);
+}
+.pool-grid .fencer-lane,
+#pools-output .fencer-lane {
+  transition: transform 180ms ease, opacity 320ms ease;
+}
+.pool-grid .fencer-lane.removing,
+#pools-output .fencer-lane.removing {
+  opacity: 0;
+  transform: translateX(-12px);
+  pointer-events: none;
+}
+
+/* Match seeding removal hover visuals for Pools rows when removal-mode is active */
+.pools-area.removal-mode .pool-grid .fencer-lane,
+#pools-output.removal-mode .pool-grid .fencer-lane,
+.pool-grid.removal-mode .fencer-lane {
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+.pools-area.removal-mode .pool-grid .fencer-lane:hover,
+#pools-output.removal-mode .pool-grid .fencer-lane:hover,
+.pool-grid.removal-mode .fencer-lane:hover {
+  transform: translateX(-8px);
+  backdrop-filter: blur(200px) saturate(400%) contrast(130%);
+  -webkit-backdrop-filter: blur(200px) saturate(300%) contrast(130%);
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow:
+    inset 0 0 40px rgba(255,255,255,0.08),
+    0 4px 20px rgba(0,0,0,0.2);
+  cursor: pointer;
+}
+
+/* Keep the inner lane row layout visually transparent so there is only
+   one "card" per fencer (the outer .fencer-lane). This avoids nested
+   card visuals while preserving spacing and grid layout. */
+.pool-grid .fencer-lane-row { background: transparent; box-shadow: none; border: none; }
+
+.fencer-lane-row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 10px;
+  align-items: center;
+  width: 100%;
+}
+
+.seed-badge {
+  /* Frutiger Aero circular badge for fencer seed numbers */
+  --sat: 0.22;
+  --hue: 280deg;
+  --bg: oklch(75% var(--sat) var(--hue) / 0.8);
+  --bg-dark: oklch(45% var(--sat) var(--hue) / 0.75);
+  --glow-intensity: 0.45;
+  
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: radial-gradient(
+    farthest-corner at bottom center,
+    rgba(255, 255, 255, var(--glow-intensity)),
+    transparent
+  ), linear-gradient(to bottom, var(--bg-dark), var(--bg));
+  border: 1px solid var(--bg);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: white;
+  text-shadow: 0 2px 0.5em rgba(0, 0, 0, 0.25);
+  box-shadow: 0 4px 4px rgba(0, 0, 0, 0.4);
+  position: relative;
+  overflow: hidden;
+}
+
+.seed-badge::after {
+  content: "";
+  position: absolute;
+  top: 4%;
+  left: 0.5em;
+  width: calc(100% - 1em);
+  height: 40%;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.8),
+    rgba(255, 255, 255, 0.1)
+  );
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+/* Exact copy of fencer-card action button visuals so the extra-info
+   button appears identical to other pages. */
+.pool-grid .card-action {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  line-height: 1;
+  min-width: 0;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.28);
+    /* place the button roughly midway between the left card edge and the fencer text
+      (keeps the text spacing the same while visually centering the button) */
+    margin-left: 6px;
+    margin-right: 18px;
+  /* default frutiger variables (fall back if none set) */
+  --sat: 0.22;
+  --glow-intensity: 0.45;
+  --bg: oklch(75% var(--sat) var(--hue, 200deg) / 0.8);
+  --bg-dark: oklch(45% var(--sat) var(--hue, 200deg) / 0.75);
+  --bottom-glow: radial-gradient(farthest-corner at bottom center, rgba(255,255,255,var(--glow-intensity)), transparent);
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg));
+  border: 1px solid var(--bg);
+  color: white;
+  text-shadow: 0 2px 0.5em rgba(0,0,0,0.2);
+  transition: transform 160ms ease, box-shadow 220ms ease;
+  /* Only animate box-shadow for glow; avoid moving the button on hover/focus */
+  transition: box-shadow 220ms ease, background 160ms ease;
+}
+
+/* Specific hues: right-most action uses orange; last action uses green */
+.pool-grid .card-action.info-btn { --hue: 33; }
+.pool-grid .card-action.remove-btn { --hue: 360; }
+
+.pool-grid .card-action.remove-btn {
+  font-weight: 800;
+  font-size: 1.05rem;
+  line-height: 1;
+  color: white;
+}
+
+.pool-grid .card-action:hover {
+  /* Keep only the white glow on hover; do not translate/scale the button */
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65);
+  outline: none;
+}
+
+.pool-grid .card-action:focus,
+.pool-grid .card-action:focus-visible {
+  outline: none;
+  /* Only show the glow on keyboard focus; do not move the element */
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 34px rgba(255,255,255,0.55);
+}
+
+@media (max-width: 980px) {
+  /* reduce the nudge on smaller screens to preserve layout */
+  .pool-grid .card-action { margin-left: 4px; margin-right: 8px; }
+}
+
+.lane-info { display: flex; flex-direction: column; gap: 4px; min-width: 0; padding-left: 0; margin-left: -12px; }
+
+@media (max-width: 980px) {
+  .lane-info { margin-left: -4px; }
+}
+.lane-name { font-weight: 700; font-size: 1rem; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+.lane-meta { font-size: 0.92rem; opacity: 0.8; white-space: nowrap; text-overflow: ellipsis; overflow: hidden; }
+
+.score-cell { padding: 0; }
+.score-cell input.score-input {
+  width: 100%;
+  height: 100%;
+  min-height: 46px;
+  border: none;
+  background: transparent;
+  color: #f8f8f8;
+  text-align: center;
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  outline: none;
+}
+
+/* Style score input boxes to match fencer-card glassy visuals. This keeps
+   inputs fully functional while giving them the same blur, border and
+   subtle depth as the fencer cards for visual consistency. */
+.score-cell input.score-input {
+  box-sizing: border-box;
+  background: radial-gradient(
+    circle at top left,
+    rgba(255,255,255,0.22),
+    rgba(255,255,255,0.06)
+  );
+  backdrop-filter: blur(14px) saturate(160%) contrast(115%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%) contrast(115%);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 10px;
+  box-shadow: inset 0 0 12px rgba(255,255,255,0.04), 0 6px 14px rgba(0,0,0,0.18);
+  padding: 6px 8px;
+  color: #ffffff;
+  font-weight: 700;
+  text-align: center;
+  transition: box-shadow 180ms ease, border-color 180ms ease;
+}
+
+.score-cell input.score-input:focus,
+.score-cell input.score-input:focus-visible {
+  outline: none;
+  border-color: rgba(255,255,255,0.28);
+  box-shadow: 0 0 10px rgba(255,255,255,0.55), 0 0 20px rgba(255,255,255,0.25);
+}
+
+.score-cell input.score-input::placeholder { color: rgba(255,255,255,0.4); }
+
+.score-input-error {
+  border-color: rgba(255, 100, 100, 0.6) !important;
+  box-shadow: inset 0 0 12px rgba(255,255,255,0.04), 0 0 8px rgba(255, 100, 100, 0.4) !important;
+}
+
+.score-input-win {
+  border-color: rgba(100, 255, 150, 0.6) !important;
+  box-shadow: inset 0 0 12px rgba(255,255,255,0.04), 0 0 12px rgba(100, 255, 150, 0.5) !important;
+}
+
+.score-cell-blocked {
+  /* Make blocked cells visually invisible while preserving the grid layout.
+     We keep the element in the DOM for alignment but remove background,
+     border, shadow and set text color transparent so the dash is hidden. */
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: transparent !important;
+  font-weight: 600; /* keep weight in case it's used for sizing elsewhere */
+}
+
+@media (max-width: 980px) {
+  .pool-score-wrapper { padding: 14px; }
+  .pool-grid { min-width: 520px; }
+  .lane-name { font-size: 0.98rem; }
+}
+
+/* Pool fencer list modal styles */
+.pool-fencer-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  max-height: 420px;
+  overflow-y: auto;
+  padding: 8px 0;
+  border-radius: 10px;
+}
+
+.pool-fencer-list-container {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.pool-buttons-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  margin: 8px 0;
+}
+
+.pool-select-btn {
+  /* Match seeding modal recommendation button sizing */
+  height: 44px;
+  min-height: 44px;
+  padding: 0 18px !important;
+  border-radius: 28px;
+  font-size: 1rem;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  white-space: normal;
+  transition: box-shadow 200ms ease, background 200ms ease;
+}
+
+.pool-select-btn.active {
+  /* subtle outline to indicate selected pool (non-hover state) */
+  box-shadow: 0 0 0 2px rgba(180, 140, 255, 0.28);
+}
+
+.pool-select-btn:hover {
+  /* Use the same white glow as the global frutiger aero button hover
+     to keep hover behavior consistent across the app. No lift/translate. */
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65);
+  transform: none;
+}
+
+.pool-selection-modal .modal-card {
+  max-width: 95%;
+  width: min(820px, calc(100% - 48px));
+}
+
+.pool-fencer-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.pool-fencer-list::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.02);
+  border-radius: 10px;
+}
+
+.pool-fencer-list::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.12);
+  border-radius: 4px;
+}
+
+.pool-fencer-list::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.pool-fencer-item {
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  transition: all 200ms ease;
+}
+
+.pool-fencer-item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.06);
+}
+
+.pool-fencer-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 4px;
+}
+
+.pool-fencer-seed {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: linear-gradient(135deg, rgba(100, 200, 255, 0.2), rgba(120, 180, 255, 0.1));
+  border: 1px solid rgba(100, 200, 255, 0.3);
+  border-radius: 6px;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 0.95rem;
+  flex-shrink: 0;
+}
+
+.pool-fencer-name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.95);
+  flex: 1;
+  word-break: break-word;
+}
+
+.pool-fencer-meta {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.65);
+  margin-left: 44px;
+  line-height: 1.3;
 }

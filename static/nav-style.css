@@ -131,6 +131,8 @@
   top: 20px;                       /* distance from the very top */
   left: 50%;                       /* anchor to the horizontal center */
   transform: translateX(-50%);     /* shift back by half its width */
+  width: 1138px;                   /* align with checkin bar left edge */
+  max-width: 95vw;                 /* stay within viewport on smaller screens */
   
   background: radial-gradient(
     circle at top left,
@@ -145,7 +147,7 @@
   inset 0 0 40px rgba(255, 255, 255, 0.08),
   0 4px 20px rgba(0, 0, 0, 0.2);
   
-  padding: 20px 40px;
+  padding: 20px 60px 20px 20px;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -162,15 +164,25 @@
 .main-buttons {
   display: flex;
   gap: 12px;
+  /* Lock the Home–DE group so other changes won't shift it */
+  flex: 0 0 620px;
+  flex-wrap: nowrap;
+  white-space: nowrap;
 }
 
-.event-nav {
+.middle-buttons {
   display: flex;
+  flex: 1; /* expands to center between left and right */
+  gap: 12px;
+}
+
+/* Right group: +/- buttons */
+.right-buttons {
+  display: flex;
+  gap: 12px;
   align-items: center;
-  gap: 10px;
-  font-size: 1rem;
-  color: white;
-  font-weight: 600;
+  padding-right: 20px;
+  margin-left: auto;
 }
 
 .nav-arrow {
@@ -268,9 +280,10 @@
 
 .top-row {
   display: flex;
-  justify-content: space-between;
+  justify-content: flex-start;
   align-items: center;
   gap: 20px;
+  width: 100%;
 }
 
 /* Left group */
@@ -296,7 +309,7 @@
 
 /* Add Fencer button: just wide enough */
 .add-fencer-btn {
-  min-width: 130px;   /* enough so text isn’t mushed */
+  min-width: 125px;   /* enough so text isn’t mushed */
   padding: 12px 22px; /* balanced padding */
 }
 
@@ -304,6 +317,11 @@
 .events-btn {
   min-width: 110px;
   padding: 12px 20px;
+}
+
+.remove-copy-btn {
+  min-width: 125px;   /* enough so text isn’t mushed */
+  padding: 12px 22px; /* balanced padding */
 }
 
 .nav-btn {
@@ -346,8 +364,16 @@
 .seeding-btn { --hue: 25deg; }
 .pools-btn { --hue: 305deg; }
 .de-btn { --hue: 200deg; }
+.results-btn { --hue: 50deg; }
 .add-fencer-btn { --hue: 45deg; }
 .events-btn { --hue: 270deg; }
+.display-mode-btn { --hue: 200deg; }
+
+/* Make the nav Remove copy visually pink (distinct from Events) */
+.remove-copy-btn {
+  --hue: 330deg; /* pink/magenta hue */
+  --sat: 0.30;
+}
 
 
 
@@ -438,6 +464,203 @@
   border-radius: 30px;    
 }
 
+/* Display Mode button: match Events styling but wider to fit text */
+.display-mode-btn {
+  padding: 8px 10px;      
+  font-size: 0.95rem;      
+  border-radius: 30px;
+  min-width: 140px;
+}
 
+
+  
+
+/* When on the Check‑in page we want most nav buttons to appear muted/disabled
+   so users cannot jump ahead. The body class `checkin-nav-disabled` is added
+   by `checkin.js`. Keep pointer-events enabled so click interception in JS
+   can show an explanatory modal; this rule is visual-only and uses
+   high-specificity + !important to win over the colorful per-button rules. */
+body.checkin-nav-disabled .nav-btn:not(.home-btn):not(.summary-btn):not(.seeding-btn):not(.add-fencer-btn):not(.remove-copy-btn):not(.events-btn):not(.display-mode-btn):not(.checkin-btn) {
+  /* Make disabled buttons a desaturated blue-gray using the same
+     variable-driven OKLCH pattern used by other buttons. */
+  --sat: 0.06 !important;       /* low saturation for muted look */
+  --hue: 220deg !important;     /* blue-ish hue */
+  color: rgba(255,255,255,0.92) !important;
+  /* Use the nav button variables so the visual style matches other buttons */
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg)) !important;
+  background-color: var(--bg) !important;
+  border-color: var(--bg) !important;
+  box-shadow: none !important;
+  text-shadow: none !important;
+  cursor: not-allowed !important;
+  filter: none !important;
+}
+
+/* Seeding page: gray out Pools and DE similarly to check-in muted state */
+body.seeding-nav-muted .pools-btn,
+body.seeding-nav-muted .pools-btn[aria-disabled="true"] {
+  --sat: 0 !important;
+  --hue: 0deg !important;
+  --bg: oklch(68% 0 0 / 0.92) !important;
+  --bg-dark: oklch(48% 0 0 / 0.90) !important;
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg)) !important;
+  background-color: var(--bg) !important;
+  border-color: var(--bg) !important;
+  box-shadow: none !important;
+  color: rgba(255,255,255,0.92) !important;
+  cursor: not-allowed !important;
+  pointer-events: auto !important; /* keep clickable for modal interception */
+}
+
+/* Seeding page: gray out Results similarly to Pools (muted, interceptable) */
+body.seeding-nav-muted .results-btn,
+body.seeding-nav-muted .results-btn[aria-disabled="true"] {
+  --sat: 0 !important;
+  --hue: 0deg !important;
+  --bg: oklch(68% 0 0 / 0.92) !important;
+  --bg-dark: oklch(48% 0 0 / 0.90) !important;
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg)) !important;
+  background-color: var(--bg) !important;
+  border-color: var(--bg) !important;
+  box-shadow: none !important;
+  color: rgba(255,255,255,0.92) !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important; /* non-clickable like DE */
+}
+
+/* Pools page: gray out DE until ALL pools are complete */
+body.pools-nav-muted .de-btn,
+body.pools-nav-muted .de-btn[aria-disabled="true"] {
+  --sat: 0 !important;
+  --hue: 0deg !important;
+  --bg: oklch(68% 0 0 / 0.92) !important;
+  --bg-dark: oklch(48% 0 0 / 0.90) !important;
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg)) !important;
+  background-color: var(--bg) !important;
+  border-color: var(--bg) !important;
+  box-shadow: none !important;
+  color: rgba(255,255,255,0.92) !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+/* Pools page: also gray out Results while Pools are incomplete */
+body.pools-nav-muted .results-btn,
+body.pools-nav-muted .results-btn[aria-disabled="true"] {
+  --sat: 0 !important;
+  --hue: 0deg !important;
+  --bg: oklch(68% 0 0 / 0.92) !important;
+  --bg-dark: oklch(48% 0 0 / 0.90) !important;
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg)) !important;
+  background-color: var(--bg) !important;
+  border-color: var(--bg) !important;
+  box-shadow: none !important;
+  color: rgba(255,255,255,0.92) !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+/* Keep muted DE from glowing on hover on Pools */
+body.pools-nav-muted .de-btn:hover,
+body.pools-nav-muted .de-btn:focus-visible {
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+}
+
+/* Keep muted Results from glowing on hover on Pools */
+body.pools-nav-muted .results-btn:hover,
+body.pools-nav-muted .results-btn:focus-visible {
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+}
+
+/* Keep a visible hover/hand effect on the muted Pools button when on Seeding */
+body.seeding-nav-muted .pools-btn:hover,
+body.seeding-nav-muted .pools-btn:focus-visible {
+  box-shadow: none !important;
+  cursor: not-allowed !important;
+}
+
+/* Keep a visible hover/hand effect on the muted Results button when on Seeding */
+body.seeding-nav-muted .results-btn:hover,
+body.seeding-nav-muted .results-btn:focus-visible {
+  box-shadow: none !important;
+  cursor: default !important;
+}
+
+/* Match DE hover behavior: same muted hover with default cursor */
+body.seeding-nav-muted .de-btn:hover,
+body.seeding-nav-muted .de-btn:focus-visible {
+  box-shadow: none !important;
+  cursor: default !important;
+}
+
+body.seeding-nav-muted .de-btn,
+body.seeding-nav-muted .de-btn[aria-disabled="true"] {
+  --sat: 0 !important;
+  --hue: 0deg !important;
+  --bg: oklch(68% 0 0 / 0.92) !important;
+  --bg-dark: oklch(48% 0 0 / 0.90) !important;
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg)) !important;
+  background-color: var(--bg) !important;
+  border-color: var(--bg) !important;
+  box-shadow: none !important;
+  color: rgba(255,255,255,0.92) !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+/* (Intentionally no seeding-btn override in seeding muted state so it keeps normal hue/glow and remains clickable) */
+
+/* Also ensure aria-disabled and .disabled markers pick up the same appearance */
+body.checkin-nav-disabled .nav-btn.disabled,
+body.checkin-nav-disabled .nav-btn[aria-disabled="true"] {
+  --sat: 0.06 !important;
+  --hue: 220deg !important;
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg)) !important;
+  background-color: var(--bg) !important;
+  border-color: var(--bg) !important;
+  box-shadow: none !important;
+  color: rgba(255,255,255,0.92) !important;
+  cursor: not-allowed !important;
+}
+
+/* Ensure Pools and DE use the exact same disabled OKLCH gray as Seeding */
+body.checkin-nav-disabled .pools-btn,
+body.checkin-nav-disabled .de-btn,
+body.checkin-nav-disabled .results-btn,
+body.checkin-nav-disabled .pools-btn[aria-disabled="true"],
+body.checkin-nav-disabled .results-btn[aria-disabled="true"],
+body.checkin-nav-disabled .de-btn[aria-disabled="true"] {
+  --sat: 0 !important;
+  --hue: 0deg !important;
+  /* match the seeding/disabled gray used elsewhere */
+  --bg: oklch(68% 0 0 / 0.92) !important;
+  --bg-dark: oklch(48% 0 0 / 0.90) !important;
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg)) !important;
+  background-color: var(--bg) !important;
+  border-color: rgba(255,255,255,0.06) !important;
+  box-shadow: none !important;
+  color: rgba(255,255,255,0.92) !important;
+  cursor: not-allowed !important;
+  /* Prevent mouse interaction so clicks won't navigate */
+  pointer-events: none !important;
+}
+
+
+
+/* Final override: make +/- nav buttons match extra info buttons and be truly circular */
+.right-buttons .add-fencer-btn,
+.right-buttons .remove-copy-btn {
+  flex: 0 0 40px !important;
+  min-width: 40px !important;
+  width: 40px !important;
+  height: 40px !important;
+  padding: 0 !important;
+  font-size: 0.95rem !important;
+  border-radius: 50% !important;
+  line-height: 1 !important;
+  aspect-ratio: 1 !important;
+}
 
 

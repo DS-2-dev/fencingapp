@@ -1,5 +1,18 @@
 {% extends "base.html" %}
 {% block content %}
-  <h1>Welcome to the Seeding Page</h1>
-  <!-- Your clipboard-style layout goes here -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='checkin.css') }}">
+
+  <div class="seeding-bar" role="region" aria-label="Seeding controls">
+    <button class="frutiger-aero-button custom-btn" type="button">Custom</button>
+    <button class="frutiger-aero-button randomize-btn" type="button">Randomize</button>
+    <button class="frutiger-aero-button move-fencer-btn" type="button">Move Fencer</button>
+    <button class="frutiger-aero-button save-btn" type="button">Save</button>
+  </div>
+  <div class="seeding-area">
+    <div id="seeding-output" class="seeding-output" aria-live="polite"></div>
+  </div>
+
+  
+
+  <script src="{{ url_for('static', filename='seeding.js') }}?v=2"></script>
 {% endblock %}

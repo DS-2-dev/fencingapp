@@ -1,5 +1,31 @@
 {% extends "base.html" %}
 {% block content %}
 <link rel="stylesheet" href="{{ url_for('static', filename='summarybar.css') }}">
-<div class="date-card">
+
+  <div class="summary-bar" role="region" aria-label="Summary controls">
+    <button class="frutiger-aero-button edit-btn" type="button">Edit</button>
+    <button class="frutiger-aero-button save-btn" type="button">Save</button>
+  </div>
+
+  <div class="summary-cards-wrapper">
+    <div class="summary-info-card">
+      <div class="info-row"><span class="info-label">Name:</span> <span class="info-value" contenteditable="false">{{ tournament.get('name', 'N/A') }}</span></div>
+      <div class="info-row"><span class="info-label">Location:</span> <span class="info-value" contenteditable="false">{{ tournament.get('location', 'N/A') }}</span></div>
+      <div class="info-row"><span class="info-label">Date:</span> <span class="info-value" contenteditable="false">{{ tournament.get('date', 'N/A') }}</span></div>
+      <div class="info-row"><span class="info-label">Fee:</span> <span class="info-value" contenteditable="false">{{ tournament.get('fee', 'N/A') }}</span></div>
+      <div class="info-row"><span class="info-label">Tournament ID:</span> <span class="info-value" contenteditable="false">{{ tournament.get('id', 'N/A') }}</span></div>
+    </div>
+
+    <div class="summary-info-card">
+      <div class="info-row"><span class="info-label">Time:</span> <span class="info-value" contenteditable="false">{{ event.get('time', 'N/A') }}</span></div>
+      <div class="info-row"><span class="info-label">Weapon:</span> <span class="info-value" contenteditable="false">{{ event.get('weapon', 'N/A') }}</span></div>
+      <div class="info-row"><span class="info-label">Gender Mixed:</span> <span class="info-value" contenteditable="false">{{ event.get('gender_mixed', 'N/A') }}</span></div>
+      <div class="info-row"><span class="info-label">Age Limit:</span> <span class="info-value" contenteditable="false">{{ event.get('age_limit', 'N/A') }}</span></div>
+      <div class="info-row"><span class="info-label">Rating Limit:</span> <span class="info-value" contenteditable="false">{{ event.get('rating_limit', 'N/A') }}</span></div>
+      <div class="info-row"><span class="info-label">Event ID:</span> <span class="info-value" contenteditable="false">{{ event.get('id', 'N/A') }}</span></div>
+    </div>
+  </div>
+
+<script src="{{ url_for('static', filename='summary.js') }}"></script>
+
 {% endblock %}

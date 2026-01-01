@@ -1,5 +1,5 @@
 body {
-  background-color: #3a4874b0;
+  background-color: #000000;
   /*url(https://luciellong.com/wp-content/uploads/2021/09/tableau-peinture-escrime-sport-art-jeux-olympiques-tokyo-medaille-or.jpg); */
   background-size: cover;
   background-position: center;
@@ -181,6 +181,24 @@ body {
 .usa-fencing-btn { --hue: 250; }
 .new-tournament-btn { --hue: 40; }
 .continue-btn { --hue: 140; }
+
+/* Disabled/gray button state when action is not available (e.g., no tournament)
+   Uses a neutral OKLCH gray so it reads as disabled while matching the app's
+   color system. */
+.frutiger-aero-button.disabled,
+.frutiger-aero-button[aria-disabled="true"] {
+  --sat: 0;
+  --hue: 0deg;
+  --fg: rgba(255,255,255,0.85);
+  --bg: oklch(68% 0 0 / 0.92);
+  --bg-dark: oklch(48% 0 0 / 0.9);
+  /* allow pointer events so we can intercept clicks and show confirmations
+     while still visually presenting a disabled state */
+  cursor: not-allowed;
+  opacity: 0.95;
+  box-shadow: none !important;
+  border-color: rgba(255,255,255,0.06) !important;
+}
 
 /* Corner Button Outer Shell */
 .corner-button {

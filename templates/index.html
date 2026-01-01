@@ -32,7 +32,7 @@
   </div>
   
   <!-- Hidden file inputs triggered by the Import buttons -->
-  <input id="import-fred-input" type="file" accept="text/csv,.csv" style="display:none" aria-hidden="true">
+  <input id="import-fred-input" type="file" accept="text/csv,.csv,.frd,application/xml,text/xml" style="display:none" aria-hidden="true">
   <input id="import-usa-input" type="file" accept="text/csv,.csv" style="display:none" aria-hidden="true">
 
   <script src="{{ url_for('static', filename='import.js') }}"></script>

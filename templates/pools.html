@@ -1,5 +1,20 @@
 {% extends "base.html" %}
 {% block content %}
-  <h1>Welcome to the Pools Page</h1>
-  <!-- Your clipboard-style layout goes here -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='checkin.css') }}">
+  <style>
+    body { overflow: hidden !important; }
+  </style>
+
+  <div class="pools-bar" role="region" aria-label="Pools controls">
+    <button class="frutiger-aero-button pool-btn" type="button">Pool</button>
+    <button class="frutiger-aero-button move-fencer-btn" type="button">Move Fencer</button>
+    <button class="frutiger-aero-button connect-device-btn" type="button">Connect Device</button>
+    <button class="frutiger-aero-button advancement-btn" type="button">Advancement</button>
+    <button class="frutiger-aero-button save-btn" type="button">Save</button>
+  </div>
+  <div class="pools-area">
+    <div id="pools-output" class="pools-output" aria-live="polite"></div>
+  </div>
+
+  <script src="{{ url_for('static', filename='pools.js') }}?v=1"></script>
 {% endblock %}

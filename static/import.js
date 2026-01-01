@@ -39,8 +39,185 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Parse ASK Fred XML format (.frd files)
+  function parseXML_AskFred(xmlText) {
+    try {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(xmlText, 'text/xml');
+      
+      // Check for parsing errors
+      if (xmlDoc.getElementsByTagName('parsererror').length > 0) {
+        throw new Error('XML parse error');
+      }
+
+      // Build ClubID -> Club Name map from ClubDatabase
+      const clubMap = {};
+      const clubDivisionIdMap = {};
+      const clubElements = xmlDoc.getElementsByTagName('Club');
+      for (let i = 0; i < clubElements.length; i++) {
+        const clubEl = clubElements[i];
+        const clubId = clubEl.getAttribute('ClubID');
+        const clubName = clubEl.getAttribute('Name');
+        const clubDivisionId = clubEl.getAttribute('DivisionID') || '';
+        if (clubId && clubName) {
+          clubMap[clubId] = clubName;
+        }
+        if (clubId && clubDivisionId) {
+          clubDivisionIdMap[clubId] = clubDivisionId;
+        }
+      }
+
+      // Build DivisionID -> Division Name map if Division elements exist
+      const divisionMap = {};
+      const divisionElements = xmlDoc.getElementsByTagName('Division');
+      for (let i = 0; i < divisionElements.length; i++) {
+        const dEl = divisionElements[i];
+        const dId = dEl.getAttribute('DivisionID') || dEl.getAttribute('ID');
+        const dName = dEl.getAttribute('Name') || dEl.textContent.trim();
+        if (dId && dName) divisionMap[dId] = dName;
+      }
+      // If no explicit Division elements, provide friendly names for known IDs
+      if (Object.keys(divisionMap).length === 0) {
+        const friendlyDivisionNames = {
+          '12': 'Utah S.Idaho',
+          '69': 'Mountain West',
+        };
+        // Seed map from any division IDs referenced by clubs
+        Object.values(clubDivisionIdMap).forEach(id => {
+          if (id && !divisionMap[id]) divisionMap[id] = friendlyDivisionNames[id] || id;
+        });
+      }
+
+      // Extract all Fencer elements
+      const fencerElements = xmlDoc.getElementsByTagName('Fencer');
+      let fencers = [];
+
+      for (let i = 0; i < fencerElements.length; i++) {
+        const el = fencerElements[i];
+        const firstName = el.getAttribute('FirstName') || '';
+        const lastName = el.getAttribute('LastName') || '';
+        const birthYear = el.getAttribute('BirthYear') || '';
+        const fencerId = el.getAttribute('FencerID') || '';
+        const clubId1 = el.getAttribute('ClubID1') || '';
+        const divisionId = el.getAttribute('DivisionID') || '';
+        
+        // Extract all weapon-specific ratings and store them
+        const ratings = {};
+        const ratingElements = el.getElementsByTagName('Rating');
+        for (let j = 0; j < ratingElements.length; j++) {
+          const ratingEl = ratingElements[j];
+          const weapon = ratingEl.getAttribute('Weapon') || '';
+          const ratingVal = ratingEl.textContent.trim();
+          if (weapon) {
+            ratings[weapon] = ratingVal;
+          }
+        }
+        
+        // For backward compatibility, also extract best rating across weapons
+        let rating = '';
+        for (const weapon in ratings) {
+          const ratingVal = ratings[weapon];
+          if (ratingVal && ratingVal !== 'U') {
+            rating = ratingVal;
+            break;
+          } else if (!rating) {
+            rating = ratingVal;
+          }
+        }
+
+        // Look up club name from ClubID1
+        const clubName = clubMap[clubId1] || '';
+
+        // Extract membership ID
+        let membershipId = '';
+        const membershipEl = el.getElementsByTagName('Membership')[0];
+        if (membershipEl) {
+          membershipId = membershipEl.textContent.trim();
+        }
+
+        const fullName = `${lastName}, ${firstName}`.trim();
+        // Prefer division from the club's DivisionID when available
+        const clubDivisionId = clubDivisionIdMap[clubId1] || '';
+        const divisionName = divisionMap[clubDivisionId] || divisionMap[divisionId] || divisionId || '';
+        
+        fencers.push({
+          id: `f-${fencerId}`,
+          name: fullName,
+          born: birthYear,
+          rank: rating || '',
+          ratings: ratings,
+          club: clubName,
+          division: divisionName,
+          category: '',
+          membershipId: membershipId,
+          raw: {
+            FirstName: firstName,
+            LastName: lastName,
+            BirthYear: birthYear,
+            FencerID: fencerId,
+            Rating: rating,
+            Ratings: ratings,
+            ClubID: clubId1,
+            ClubName: clubName,
+            MembershipID: membershipId
+          }
+        });
+      }
+
+      // Filter out empty names and sort by last name
+      fencers = fencers.filter(f => f.name && f.name.trim().length > 0);
+      
+      function lastNameKey(fullName) {
+        if (!fullName) return '';
+        const s = fullName.trim();
+        if (s.indexOf(',') !== -1) return s.split(',')[0].trim().toLowerCase();
+        const parts = s.split(/\s+/);
+        return parts.length ? parts[parts.length - 1].toLowerCase() : s.toLowerCase();
+      }
+
+      fencers.sort((a, b) => {
+        const la = lastNameKey(a.name || '');
+        const lb = lastNameKey(b.name || '');
+        if (la < lb) return -1;
+        if (la > lb) return 1;
+        return 0;
+      });
+
+      // Extract event weapon from first Event element for tournament-wide weapon filtering
+      try {
+        const eventElement = xmlDoc.getElementsByTagName('Event')[0];
+        if (eventElement) {
+          const eventWeapon = eventElement.getAttribute('Weapon') || '';
+          if (eventWeapon) {
+            sessionStorage.setItem('fencingapp:event-weapon', eventWeapon);
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse event weapon:', e);
+      }
+
+      // Return in CSV row format for compatibility with existing flow
+      // (headers + data rows) - include membershipId and division columns
+      const headers = ['name', 'born', 'rank', 'club', 'division', 'membershipId'];
+      const rows = [headers];
+      fencers.forEach(f => {
+        rows.push([f.name, f.born, f.rank, f.club, f.division || '', f.membershipId]);
+      });
+      return rows;
+    } catch (err) {
+      console.error('parseXML_AskFred failed:', err);
+      throw new Error('Failed to parse ASK Fred XML file');
+    }
+  }
+
   // Basic CSV parser that handles quoted fields and newlines.
   function parseCSV(text) {
+    // Try to detect if this is actually an XML file (ASK Fred .frd format)
+    const trimmed = text.trim();
+    if (trimmed.startsWith('<?xml') || trimmed.startsWith('<FencingData')) {
+      return parseXML_AskFred(text);
+    }
+
     const rows = [];
     let cur = '';
     let row = [];
@@ -91,6 +268,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const rank = headerGet(['rank','rating','usa rating','seed','ranking','classification','class','rating (usa)','usa_rating']) || '';
       // class/category headers (many exports call this 'class' or 'category' or 'classification')
       const category = headerGet(['class','category','classification','fencer class']) || '';
+      // membership ID field
+      const membershipId = headerGet(['membershipid','membership id','membership','member id','usfa id','member number']) || '';
       // best effort: if name empty, try first+last
       let finalName = '';
       if (name) finalName = name;
@@ -106,6 +285,7 @@ document.addEventListener('DOMContentLoaded', () => {
         division: (division||'').trim(),
         rank: (rank||'').trim(),
         category: (category||'').trim(),
+        membershipId: (membershipId||'').trim(),
         raw: obj
       };
     }).filter(f => f.name && f.name.length>0);
@@ -140,6 +320,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
     handleFileSelection(fredInput, 'Ask FRED');
   }
+
+  // Update Home page button states based on whether a tournament (imported fencers)
+  // exists in sessionStorage. If fencers are present, enable "Continue Tournament"
+  // and disable "New Tournament"; otherwise do the opposite.
+  function updateHomeButtons() {
+    try {
+      const newBtn = document.querySelector('.new-tournament-btn');
+      const contBtn = document.querySelector('.continue-btn');
+      const raw = sessionStorage.getItem('fencingapp:fencers');
+      let hasFencers = false;
+      try { const arr = raw ? JSON.parse(raw) : []; hasFencers = Array.isArray(arr) && arr.length > 0; } catch (e) { hasFencers = false; }
+
+      if (hasFencers) {
+        // Tournament in play: Continue enabled, New disabled
+        if (contBtn) { contBtn.classList.remove('disabled'); contBtn.setAttribute('aria-disabled', 'false'); }
+        if (newBtn) { newBtn.classList.add('disabled'); newBtn.setAttribute('aria-disabled', 'true'); }
+      } else {
+        // No tournament: Continue disabled, New enabled
+        if (contBtn) { contBtn.classList.add('disabled'); contBtn.setAttribute('aria-disabled', 'true'); }
+        if (newBtn) { newBtn.classList.remove('disabled'); newBtn.setAttribute('aria-disabled', 'false'); }
+      }
+    } catch (e) { /* ignore UI update errors */ }
+  }
+
+  // Call once on load so the home page reflects session state immediately.
+  try { updateHomeButtons(); } catch (e) {}
 
   if (usaBtn && usaInput) {
     usaBtn.addEventListener('click', (e) => {
