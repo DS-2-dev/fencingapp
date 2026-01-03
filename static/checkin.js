@@ -398,26 +398,18 @@ document.addEventListener('DOMContentLoaded', () => {
       };
 
       if (addArea) {
-        // Use pointerover/pointerout (they bubble) so hovering ANY descendant
-        // inside the add-area triggers expansion/collapse. Guard against
-        // pointer movements between children by checking relatedTarget.
-        addArea.addEventListener('pointerover', (ev) => {
-          try {
-            // If pointer came from inside the addArea, ignore
-            const from = ev.relatedTarget;
-            if (from && addArea.contains(from)) return;
-            onHoverExpand(ev);
-          } catch (e) {}
-        });
-        addArea.addEventListener('pointerout', (ev) => {
-          try {
-            // If pointer is moving to another element inside addArea, ignore
-            const to = ev.relatedTarget;
-            if (to && addArea.contains(to)) return;
-            onHoverCollapse(ev);
-          } catch (e) {}
-        });
-        addArea.addEventListener('touchstart', (ev) => { onHoverExpand(ev); }, { passive: true });
+        // Hover expansion intentionally disabled: keep add-area at its
+        // computed, content-fit width and do not attach pointer hover handlers.
+        try {
+          // Measure once to set an appropriate starting width variable
+          const measured = measureAndSetMax(true) || 0;
+          // Apply the collapsed width inline so the area is stable.
+          const desired = Math.min(maxWcfg, Math.max(startW || 0, Math.ceil(measured + paddingExtra)));
+          addArea.style.setProperty('--max-w', `${Math.round(desired)}px`);
+          addArea.style.width = `${Math.round(desired)}px`;
+          addArea.style.maxWidth = `${Math.round(desired)}px`;
+          addArea.classList.add('add-init');
+        } catch (e) {}
       }
 
       // When individual fields blur (user leaves the editable), collapse the

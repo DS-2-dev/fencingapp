@@ -25,7 +25,7 @@
 
       <!-- Middle group: Events + Display Mode -->
       <div class="middle-buttons">
-        <a href="/events" class="nav-btn frutiger-aero-button events-btn">Events</a>
+        <a href="/events" class="nav-btn frutiger-aero-button events-btn"><span class="events-label">Events</span></a>
         <a href="#" class="nav-btn frutiger-aero-button display-mode-btn" role="button" aria-label="Display Mode">Display Mode</a>
       </div>
 
@@ -42,5 +42,74 @@
     {% block content %}{% endblock %}
   </main>
   <script src="{{ url_for('static', filename='nav-active.js') }}"></script>
+  <script>
+    (function(){
+      try {
+        const labelEl = document.querySelector('.events-btn .events-label');
+        if (!labelEl) return;
+
+        // Compose label from saved summary data (if present)
+        const saved = sessionStorage.getItem('fencingapp:summary-data');
+        if (saved) {
+          try {
+            const data = JSON.parse(saved);
+            const evt = data.event || {};
+            const parts = [];
+
+            const sanitize = v => {
+              if (v === null || v === undefined) return null;
+              const s = String(v).trim();
+              if (!s) return null;
+              const low = s.toLowerCase();
+              if (low === 'none' || low === 'n/a' || low === 'null' || low === 'undefined') return null;
+              return s;
+            };
+
+            const rating = sanitize(evt.rating_limit);
+            const age = sanitize(evt.age_limit);
+            let gender = sanitize(evt.gender_mixed);
+            const weapon = sanitize(evt.weapon);
+
+            if (rating) parts.push(rating);
+            if (age) parts.push(age);
+            if (gender) {
+              const gm = gender.toLowerCase();
+              if (gm === 'yes' || gm === 'true' || gm === 'mixed') {
+                parts.push('Mixed');
+              } else {
+                parts.push(gender.charAt(0).toUpperCase() + gender.slice(1));
+              }
+            }
+            if (weapon) parts.push(weapon);
+
+            if (parts.length) {
+              labelEl.textContent = parts.join(' ');
+            }
+          } catch (e) { /* ignore parse errors */ }
+        }
+
+        // Ensure the visible width matches the width of "Mixed Saber" so
+        // longer labels will be truncated with an ellipsis.
+        try {
+          const meas = document.createElement('span');
+          meas.className = 'events-label';
+          meas.style.position = 'absolute';
+          meas.style.visibility = 'hidden';
+          meas.style.whiteSpace = 'nowrap';
+          meas.textContent = 'Mixed Saber';
+          document.body.appendChild(meas);
+          const targetW = Math.ceil(meas.getBoundingClientRect().width);
+          document.body.removeChild(meas);
+          // apply as inline max-width so it overrides stylesheet default
+          labelEl.style.maxWidth = targetW + 'px';
+        } catch (e) { /* ignore measurement errors */ }
+
+        // If no label was set from data, default to "Mixed Saber"
+        if (!labelEl.textContent || !labelEl.textContent.trim()) {
+          labelEl.textContent = 'Mixed Saber';
+        }
+      } catch (e) { console.error('Failed to set events label', e); }
+    })();
+  </script>
 </body>
 </html>

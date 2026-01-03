@@ -318,6 +318,15 @@
   min-width: 110px;
   padding: 12px 20px;
 }
+/* Truncate the events button label if it overflows */
+.events-btn .events-label {
+  display: inline-block;
+  max-width: 140px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  vertical-align: middle;
+}
 
 .remove-copy-btn {
   min-width: 125px;   /* enough so text isn’t mushed */
@@ -645,6 +654,47 @@ body.checkin-nav-disabled .de-btn[aria-disabled="true"] {
   cursor: not-allowed !important;
   /* Prevent mouse interaction so clicks won't navigate */
   pointer-events: none !important;
+}
+
+
+/* Summary page: gray out Seeding through Results and the add/remove circle buttons */
+body.summary-nav-disabled .seeding-btn,
+body.summary-nav-disabled .pools-btn,
+body.summary-nav-disabled .de-btn,
+body.summary-nav-disabled .results-btn,
+body.summary-nav-disabled .seeding-btn[aria-disabled="true"],
+body.summary-nav-disabled .pools-btn[aria-disabled="true"],
+body.summary-nav-disabled .de-btn[aria-disabled="true"],
+body.summary-nav-disabled .results-btn[aria-disabled="true"] {
+  --sat: 0 !important;
+  --hue: 0deg !important;
+  --bg: oklch(68% 0 0 / 0.92) !important;
+  --bg-dark: oklch(48% 0 0 / 0.90) !important;
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg)) !important;
+  background-color: var(--bg) !important;
+  border-color: var(--bg) !important;
+  box-shadow: none !important;
+  color: rgba(255,255,255,0.92) !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+}
+
+body.summary-nav-disabled .right-buttons .add-fencer-btn,
+body.summary-nav-disabled .right-buttons .remove-copy-btn,
+body.summary-nav-disabled .add-fencer-btn[aria-disabled="true"],
+body.summary-nav-disabled .remove-copy-btn[aria-disabled="true"] {
+  --sat: 0 !important;
+  --hue: 0deg !important;
+  --bg: oklch(68% 0 0 / 0.92) !important;
+  --bg-dark: oklch(48% 0 0 / 0.90) !important;
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg)) !important;
+  background-color: var(--bg) !important;
+  border-color: var(--bg) !important;
+  box-shadow: none !important;
+  color: rgba(255,255,255,0.92) !important;
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  opacity: 0.95 !important;
 }
 
 

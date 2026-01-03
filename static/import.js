@@ -196,6 +196,60 @@ document.addEventListener('DOMContentLoaded', () => {
         console.error('Failed to parse event weapon:', e);
       }
 
+      // Extract tournament and first-event metadata and save to sessionStorage
+      try {
+        const tournEl = xmlDoc.getElementsByTagName('Tournament')[0];
+        const eventEl = xmlDoc.getElementsByTagName('Event')[0];
+        const tournament = {};
+        const event = {};
+        if (tournEl) {
+          const fee_amount = tournEl.getAttribute('Fee') || '0.00';
+          const fee_currency = tournEl.getAttribute('FeeCurrency') || 'USD';
+          const currency_symbols = {
+            'USD': '$', 'EUR': '€', 'GBP': '£', 'JPY': '¥', 'CAD': 'C$', 'AUD': 'A$'
+          };
+          const symbol = currency_symbols[fee_currency] || (fee_currency + ' ');
+          const formatted_fee = `${symbol}${fee_amount}`;
+          tournament.name = tournEl.getAttribute('Name') || '';
+          tournament.location = tournEl.getAttribute('Location') || '';
+          tournament.date = tournEl.getAttribute('StartDate') || '';
+          tournament.fee = formatted_fee;
+          tournament.id = tournEl.getAttribute('TournamentID') || '';
+        }
+        if (eventEl) {
+          const event_time_raw = eventEl.getAttribute('EventDateTime') || '';
+          let event_time = event_time_raw;
+          if (event_time_raw && event_time_raw.indexOf(' ') !== -1) {
+            event_time = event_time_raw.split(' ', 2)[1];
+          }
+          const weapon = eventEl.getAttribute('Weapon') || '';
+          const gender = eventEl.getAttribute('Gender') || '';
+          const gender_mixed = (gender === 'Mixed') ? 'Yes' : 'No';
+          const age_min = eventEl.getAttribute('AgeLimitMin') || '';
+          const age_max = eventEl.getAttribute('AgeLimitMax') || '';
+          const enforce_age = eventEl.getAttribute('EnforceAge') || 'False';
+          let age_limit = '';
+          if (enforce_age === 'False' || !age_min) age_limit = 'None';
+          else if (age_min === age_max) age_limit = age_min;
+          else age_limit = `${age_min} - ${age_max}`;
+          let rating_limit = eventEl.getAttribute('RatingLimit') || 'Open';
+          const enforce_rating = eventEl.getAttribute('EnforceRating') || 'False';
+          if (enforce_rating === 'False' || rating_limit === 'Open') rating_limit = 'None';
+          const event_id = eventEl.getAttribute('EventID') || '';
+          event.time = event_time;
+          event.weapon = weapon;
+          event.gender_mixed = gender_mixed;
+          event.age_limit = age_limit;
+          event.rating_limit = rating_limit;
+          event.id = event_id;
+        }
+        // Save summary data for the summary page to pick up
+        const summaryData = { tournament: tournament, event: event };
+        sessionStorage.setItem('fencingapp:summary-data', JSON.stringify(summaryData));
+      } catch (e) {
+        console.error('Failed to extract tournament/event metadata:', e);
+      }
+
       // Return in CSV row format for compatibility with existing flow
       // (headers + data rows) - include membershipId and division columns
       const headers = ['name', 'born', 'rank', 'club', 'division', 'membershipId'];

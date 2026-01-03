@@ -27,5 +27,28 @@
   </div>
 
 <script src="{{ url_for('static', filename='summary.js') }}"></script>
+<script>
+  (function(){
+    try {
+      // Persist server-side event/tournament info into sessionStorage so
+      // the nav can read it and display the current event name.
+      try {
+        const serverData = { tournament: {{ tournament|tojson }}, event: {{ event|tojson }} };
+        if (!sessionStorage.getItem('fencingapp:summary-data')) {
+          sessionStorage.setItem('fencingapp:summary-data', JSON.stringify(serverData));
+        }
+      } catch (e) { /* ignore if template vars missing */ }
+
+      document.body.classList.add('summary-nav-disabled');
+      // mark specific nav controls as disabled for accessibility
+      ['.seeding-btn', '.pools-btn', '.de-btn', '.results-btn', '.add-fencer-btn', '.remove-copy-btn'].forEach(sel => {
+        const el = document.querySelector(sel);
+        if (!el) return;
+        el.setAttribute('aria-disabled', 'true');
+        el.classList.add('disabled');
+      });
+    } catch (e) { console.error('Failed to set summary nav disabled state', e); }
+  })();
+</script>
 
 {% endblock %}

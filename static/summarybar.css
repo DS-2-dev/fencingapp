@@ -1,9 +1,10 @@
 /* Summary bar: glass/card control bar with Edit and Save buttons */
 .summary-bar {
-  width: 22.5%;
-  margin: 30px auto;
-  padding: 18px 36px;
-  height: 45px;
+  /* Match other fixed bars: size to content, center buttons, compact height/padding */
+  width: auto;
+  margin: 30px 0;
+  padding: 18px 20px;
+  height: 30px;
   border-radius: 0 0 25px 25px;
   background: radial-gradient(
     circle at top left,
@@ -27,19 +28,22 @@
   left: calc(2.5% + 96px);
   transform: none;
   z-index: 999;
-  max-width: calc(100% - 120px);
+  max-width: calc(100% - 160px);
   transition: none;
 }
 
 .summary-bar .frutiger-aero-button {
-  padding: 9px 18px;
+  /* Align button sizing with other bars */
+  padding: 9px 20px;
   border-radius: 27px;
   font-weight: 500;
-  font-size: 0.9rem;
+  font-size: 0.95rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 90px;
+  min-width: 96px;
+  width: auto !important;
+  max-width: none !important;
   white-space: nowrap;
 }
 
@@ -69,9 +73,18 @@
   flex-direction: row;
   gap: 20px;
   position: fixed;
-  top: calc(30px + 80px - 27px + 90px);
-  left: calc(2.5% + 116px);
-  max-width: calc(100% - 120px);
+  top: calc(30px + 80px - 27px + 120px);
+  /* Center this wrapper to the same nominal width as the universal nav,
+     then left-align its contents so cards sit under the nav's left content. */
+    left: 50%;
+    /* Shift the wrapper right by an additional 50px (user requested) */
+    transform: translateX(calc(-50% - 30px));
+  width: 1138px;        /* match .glass-menu-bar nominal width */
+  max-width: 95vw;
+  box-sizing: border-box;
+  /* Remove inner left padding so content hugs the left edge */
+  padding-left: 0px;
+  justify-content: flex-start;
   z-index: 998;
 }
 
