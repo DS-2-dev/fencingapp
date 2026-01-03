@@ -1,1 +1,2 @@
-# fencingapp
+# a fencing app called Fence!
+# watch out Dan...
