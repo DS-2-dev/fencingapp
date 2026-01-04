@@ -129,7 +129,7 @@
 /* Pools output: similar layout to seeding */
 .pools-area {
   position: fixed;
-  top: calc(30px + 80px + 130px);
+  top: calc(30px + 80px + 95px);
   /* nudged slightly to the right to align with updated layout */
   left: calc(2.5% + 80px);
   right: 40px;
@@ -173,7 +173,7 @@
 
 .seeding-area {
   position: fixed;
-  top: calc(30px + 80px + 130px); /* increased vertical gap beneath the seeding bar */
+  top: calc(30px + 80px + 90px); /* nudged up 40px total to sit closer under the seeding bar */
   left: calc(2.5% + 40px);
   /* extend the right edge slightly so hover translations have room
      without causing visual layout shifts — keeps appearance unchanged */
@@ -198,10 +198,10 @@
 .cards-stack.removal-mode,
 .pool-wrapper.removal-mode,
 .pool-card.removal-mode,
-.pool-list.removal-mode,
-body.removal-mode-active {
+.pool-list.removal-mode {
+  /* Allow horizontal visual affordances during removal-mode without
+     forcing ancestor overflow changes that would hide vertical scrollbars. */
   overflow-x: visible !important;
-  overflow: visible !important;
 }
 
 /* When a card is hovered during removal-mode, raise it above siblings so the

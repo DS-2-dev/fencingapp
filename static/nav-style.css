@@ -550,7 +550,9 @@ body.pools-nav-muted .de-btn[aria-disabled="true"] {
   box-shadow: none !important;
   color: rgba(255,255,255,0.92) !important;
   cursor: not-allowed !important;
-  pointer-events: none !important;
+  /* Keep visually muted but allow click interception so we can show
+     an explanatory modal. JavaScript will still check pools completion. */
+  pointer-events: auto !important;
 }
 
 /* Pools page: also gray out Results while Pools are incomplete */

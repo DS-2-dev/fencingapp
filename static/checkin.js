@@ -1153,6 +1153,48 @@ document.addEventListener('DOMContentLoaded', () => {
       if (contBtn) contBtn.addEventListener('click', (e) => {
         e.preventDefault();
         try {
+          // Ensure any transient add-area or add-modal data is saved before navigating
+          try {
+            const toPersist = [];
+            // Inline add-area card (transient dropdown)
+            try {
+              const inlineCard = document.querySelector('#add-fencer-area .add-fencer-card');
+              if (inlineCard) {
+                const name = (inlineCard.querySelector('.fencer-fullname')?.innerText || '').toString().trim();
+                const born = (inlineCard.querySelector('.meta-year')?.innerText || '').toString().trim();
+                const rank = (inlineCard.querySelector('.meta-rank')?.innerText || '').toString().trim();
+                const club = (inlineCard.querySelector('.meta-club')?.innerText || '').toString().trim();
+                if (name) toPersist.push({ name, born, rank, club });
+              }
+            } catch (e) {}
+            // Add-fencer modal (if open)
+            try {
+              const modalAdd = document.querySelector('.add-fencer-modal');
+              if (modalAdd) {
+                const name = (modalAdd.querySelector('.fencer-fullname')?.innerText || '').toString().trim();
+                const born = (modalAdd.querySelector('.meta-year')?.innerText || '').toString().trim();
+                const rank = (modalAdd.querySelector('.meta-rank')?.innerText || '').toString().trim();
+                const club = (modalAdd.querySelector('.meta-club')?.innerText || '').toString().trim();
+                if (name) toPersist.push({ name, born, rank, club });
+              }
+            } catch (e) {}
+
+            if (toPersist.length) {
+              try {
+                let raw = sessionStorage.getItem('fencingapp:fencers');
+                let fencers = raw ? JSON.parse(raw) : [];
+                for (const d of toPersist) {
+                  const newF = { id: `f-auto-${Date.now()}-${Math.floor(Math.random()*9000)}`, name: d.name, born: d.born||'', rank: d.rank||'', club: d.club||'', raw: { name: d.name, born: d.born, rank: d.rank, club: d.club } };
+                  fencers.unshift(newF);
+                }
+                sessionStorage.setItem('fencingapp:fencers', JSON.stringify(fencers));
+              } catch (e) { console.warn('Failed to persist transient add-area/modal entries', e); }
+            }
+
+            // Always normalize and persist the current fencer list so Seeding sees latest
+            try { renderFencerCards(true); } catch (e) {}
+          } catch (e) {}
+
           cleanup();
           // small delay to let overlay fade then navigate
           try {

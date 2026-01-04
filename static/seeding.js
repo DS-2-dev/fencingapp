@@ -952,10 +952,33 @@ document.addEventListener('DOMContentLoaded', () => {
     if (saved) {
       const parsed = JSON.parse(saved);
       if (Array.isArray(parsed) && parsed.length) {
-        currentPools = parsed;
-        renderPools(currentPools, 1);
-        markClean();
-        rendered = true;
+        // Validate saved pools against currently-checked fencers.
+        // If the current checked fencer set differs from the saved pools,
+        // prefer recomputing from checked fencers to avoid including
+        // non-checked or stale entries.
+        try {
+          const checked = loadFencers();
+          const checkedIds = new Set((checked || []).map(x => x && x.id).filter(Boolean));
+          const savedFlat = (parsed || []).flat().filter(Boolean).map(x => x && x.id).filter(Boolean);
+          const savedIds = new Set(savedFlat);
+
+          const mismatch = (checkedIds.size !== savedIds.size) || savedFlat.some(id => !checkedIds.has(id));
+          if (checked && checked.length > 0 && mismatch) {
+            // discard saved pools and fall through to recompute below
+            console.debug('Saved seeding pools mismatch with checked fencers; recomputing from checked list');
+          } else {
+            currentPools = parsed;
+            renderPools(currentPools, 1);
+            markClean();
+            rendered = true;
+          }
+        } catch (err) {
+          // If validation fails for any reason, be conservative and ignore saved
+          currentPools = parsed;
+          renderPools(currentPools, 1);
+          markClean();
+          rendered = true;
+        }
       }
     }
   } catch (e) {
@@ -1169,9 +1192,13 @@ document.addEventListener('DOMContentLoaded', () => {
       if (confirmBtn) confirmBtn.addEventListener('click', (e) => {
         e.preventDefault();
         try {
-          if (seedingDirty && currentPools && currentPools.length > 0) {
-            sessionStorage.setItem('fencingapp:seeding-pools', JSON.stringify(currentPools));
-            console.log('Seeding saved before navigation:', currentPools);
+          // Always persist computed pools if present, even when the user made no manual edits,
+          // so automatically computed pools are saved when the user chooses to continue.
+          if (currentPools && currentPools.length > 0) {
+            try {
+              sessionStorage.setItem('fencingapp:seeding-pools', JSON.stringify(currentPools));
+              console.log('Seeding saved before navigation (auto-save):', currentPools);
+            } catch (err) { console.error('Failed to persist computed pools before navigation', err); }
           }
           cleanup();
           setTimeout(() => { window.location.href = '/pools'; }, 30);

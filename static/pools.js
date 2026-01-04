@@ -148,6 +148,129 @@ document.addEventListener('DOMContentLoaded', () => {
     else body.classList.add('pools-nav-muted');
   }
 
+  // Return array of incomplete pool indices
+  function getIncompletePools() {
+    const incomplete = [];
+    if (!Array.isArray(allPools) || allPools.length === 0) return incomplete;
+    for (let pIdx = 0; pIdx < allPools.length; pIdx++) {
+      const pool = allPools[pIdx];
+      const size = Array.isArray(pool) ? pool.length : 0;
+      if (!size) { incomplete.push(pIdx); continue; }
+      const scores = loadPoolScores(pIdx, size);
+      let ok = true;
+      for (let rIdx = 0; rIdx < size && ok; rIdx++) {
+        for (let cIdx = rIdx + 1; cIdx < size; cIdx++) {
+          const a = parseInt(scores[rIdx][cIdx] || '0', 10);
+          const b = parseInt(scores[cIdx][rIdx] || '0', 10);
+          if (a < 5 && b < 5) { ok = false; break; }
+          if (a === b) { ok = false; break; }
+        }
+      }
+      if (!ok) incomplete.push(pIdx);
+    }
+    return incomplete;
+  }
+
+  // Show modal warning listing incomplete pools and allow user to continue
+  function showPoolsDeletionModal(anchor) {
+    try {
+      const incomplete = getIncompletePools();
+      if (!Array.isArray(incomplete) || incomplete.length === 0) {
+        // nothing to delete, just navigate
+        try { window.location.href = anchor.getAttribute('href') || '/de'; } catch (e) { window.location.href = '/de'; }
+        return;
+      }
+
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.setAttribute('role', 'dialog');
+      overlay.setAttribute('aria-modal', 'true');
+      overlay.style.zIndex = 1250;
+
+      const card = document.createElement('article');
+      card.className = 'fencer-card modal-card pool-delete-modal';
+      // Build buttons for each incomplete pool
+      const poolButtonsHtml = incomplete.map(idx => {
+        const pool = allPools[idx] || [];
+        return `<button class="frutiger-aero-button incomplete-pool-btn" data-pool-index="${idx}" style="--hue:280;">Pool ${idx+1} (${pool.length} Fencer${pool.length===1?'':'s'})</button>`;
+      }).join('');
+
+      card.innerHTML = `
+        <div class="fencer-row" style="flex-direction:column; gap:12px; align-items:stretch;">
+          <div class="fencer-name"><span style="font-size:1.12rem; font-weight:700;">Careful, it seems you aren’t ready to move on yet!</span></div>
+          <div class="fencer-meta" style="font-size:0.95rem; opacity:0.95;">The following incomplete Pools will be deleted:</div>
+          <div class="incomplete-pools-grid" style="display:grid; grid-template-columns:repeat(2, minmax(140px, 1fr)); gap:8px; align-items:center; margin-top:6px;">${poolButtonsHtml}</div>
+          <div class="meta-actions" style="margin-top:12px; display:flex; gap:10px; justify-content:flex-end;">
+            <button class="frutiger-aero-button modal-cancel">Cancel</button>
+            <button class="frutiger-aero-button modal-continue" style="--hue:140;">Continue Regardless</button>
+          </div>
+        </div>`;
+
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+      requestAnimationFrame(() => { overlay.classList.add('modal-active'); card.classList.add('fade-enter-active'); });
+      document.body.classList.add('modal-open');
+
+      const cleanup = () => {
+        try {
+          overlay.classList.remove('modal-active'); card.classList.remove('fade-enter-active'); document.body.classList.remove('modal-open');
+          setTimeout(() => { try { overlay && overlay.remove(); } catch (e) {} }, 520);
+        } catch (e) {}
+      };
+
+      // clicking a pool button navigates to that pool (select)
+      const poolBtns = card.querySelectorAll('.incomplete-pool-btn');
+      poolBtns.forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.preventDefault();
+          const idx = parseInt(btn.getAttribute('data-pool-index'), 10);
+          if (!isNaN(idx) && idx >= 0 && idx < allPools.length) {
+            currentPoolIndex = idx;
+            renderCurrentPool();
+            updatePoolButtonText();
+            cleanup();
+          }
+        });
+      });
+
+      const cancelBtn = card.querySelector('.modal-cancel');
+      if (cancelBtn) cancelBtn.addEventListener('click', (e) => { e.preventDefault(); cleanup(); });
+
+      const contBtn = card.querySelector('.modal-continue');
+      if (contBtn) contBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        try {
+          // Remove incomplete pools and their stored scores
+          const keep = [];
+          for (let p = 0; p < allPools.length; p++) {
+            if (incomplete.indexOf(p) === -1) keep.push(allPools[p]);
+            else {
+              // clear associated scores
+              try { sessionStorage.removeItem(scoreKey(p)); } catch (err) {}
+            }
+          }
+          allPools = keep;
+          // persist shortened pools
+          try { sessionStorage.setItem('fencingapp:seeding-pools', JSON.stringify(allPools)); } catch (err) {}
+          cleanup();
+          // small delay then navigate to /de
+          setTimeout(() => { try { window.location.href = anchor.getAttribute('href') || '/de'; } catch (e) { window.location.href = '/de'; } }, 260);
+        } catch (err) { console.error('ContinueRegardless error', err); }
+      });
+
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(); });
+    } catch (e) { console.error('showPoolsDeletionModal error', e); }
+  }
+
+  // Intercept clicks on the DE button when pools are incomplete, show the deletion modal
+  document.addEventListener('click', (ev) => {
+    const a = ev.target.closest && ev.target.closest('.de-btn');
+    if (!a) return;
+    if (!document.body.classList.contains('pools-nav-muted')) return; // only when muted
+    ev.preventDefault();
+    try { showPoolsDeletionModal(a); } catch (e) { console.error(e); }
+  });
+
   // Show pool selection modal with buttons only
   function showFencerListModal() {
     try {
