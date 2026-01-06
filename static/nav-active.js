@@ -44,3 +44,72 @@
     setTimeout(setActive, 10);
   }, {capture:true});
 })();
+
+/* Minimize / Maximize UI controls
+   - Ctrl+M toggles minimize (collapses fixed bars into thin strips)
+   - Ctrl+Shift+M toggles maximize (emphasizes bars)
+   - A small restore button is shown when minimized
+   State persists in localStorage under 'fencingapp:ui-state'. */
+(function(){
+  function setState(state){
+    document.body.classList.toggle('app-minimized', state === 'minimized');
+    document.body.classList.toggle('app-maximized', state === 'maximized');
+    localStorage.setItem('fencingapp:ui-state', state || 'normal');
+    updateRestoreButton();
+  }
+
+  function toggleMinimize(){
+    const isMin = document.body.classList.toggle('app-minimized');
+    if (isMin) document.body.classList.remove('app-maximized');
+    localStorage.setItem('fencingapp:ui-state', isMin ? 'minimized' : 'normal');
+    updateRestoreButton();
+  }
+
+  function toggleMaximize(){
+    const isMax = document.body.classList.toggle('app-maximized');
+    if (isMax) document.body.classList.remove('app-minimized');
+    localStorage.setItem('fencingapp:ui-state', isMax ? 'maximized' : 'normal');
+    updateRestoreButton();
+  }
+
+  function updateRestoreButton(){
+    let btn = document.querySelector('.app-restore-btn');
+    if (document.body.classList.contains('app-minimized')){
+      if (!btn){
+        btn = document.createElement('button');
+        btn.className = 'app-restore-btn frutiger-aero-button';
+        btn.innerText = 'Restore';
+        btn.addEventListener('click', () => { toggleMinimize(); });
+        document.body.appendChild(btn);
+      }
+      btn.style.display = 'inline-flex';
+    } else if (btn){
+      btn.style.display = 'none';
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const state = localStorage.getItem('fencingapp:ui-state');
+    if (state) setState(state);
+  });
+
+  document.addEventListener('keydown', (ev) => {
+    // Ctrl/Cmd + M = minimize toggle
+    if ((ev.ctrlKey || ev.metaKey) && ev.key.toLowerCase() === 'm'){
+      ev.preventDefault();
+      toggleMinimize();
+      return;
+    }
+    // Ctrl/Cmd + Shift + M = maximize toggle
+    if ((ev.ctrlKey || ev.metaKey) && ev.shiftKey && ev.key.toLowerCase() === 'm'){
+      ev.preventDefault();
+      toggleMaximize();
+      return;
+    }
+  });
+
+  // Expose helpers for debugging / external triggers
+  window.fencingappUI = {
+    setState, toggleMinimize, toggleMaximize
+  };
+})();

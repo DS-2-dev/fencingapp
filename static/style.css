@@ -11,7 +11,7 @@ body {
   justify-content: center;
   align-items: center;
   height: 100vh;
-  overflow: hidden;
+  overflow: auto;
   position: relative;
 }
 
@@ -364,5 +364,108 @@ body {
      Use a white glow to match the app-wide frutiger button style. */
   box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65);
   transform: none; /* remove the lift effect */
+}
+
+/* Global override: shift all sub-bars (fixed control bars) to the right.
+   Adjust `--sub-bar-left-offset` if you want a different indent. The
+   !important flag ensures these fixed bars align consistently across the
+   app regardless of individual file rules. On small screens we revert to
+   the original offset to avoid horizontal overflow. */
+:root {
+  --sub-bar-left-offset: calc(2.5% + 160px);
+}
+
+.checkin-bar,
+.seeding-bar,
+.pools-bar,
+.de-bar,
+.summary-bar,
+.homepage-sub-bar,
+.date-card {
+  left: var(--sub-bar-left-offset) !important;
+}
+
+/* Align pool/seeding content areas under the shifted sub-bars */
+.pools-area,
+.seeding-area {
+  left: var(--sub-bar-left-offset) !important;
+  transition: left 200ms ease;
+}
+
+@media (max-width: 1080px) {
+  /* restore the previous layout on narrower viewports */
+  :root { --sub-bar-left-offset: calc(2.5% + 96px); }
+}
+
+/* Minimize / Maximize UI states */
+body.app-minimized .checkin-bar,
+body.app-minimized .seeding-bar,
+body.app-minimized .pools-bar,
+body.app-minimized .de-bar,
+body.app-minimized .summary-bar,
+body.app-minimized .homepage-sub-bar,
+body.app-minimized .date-card {
+  height: 10px !important;
+  padding: 6px 10px !important;
+  border-radius: 12px !important;
+  opacity: 0.98 !important;
+  transform: none !important;
+  overflow: hidden !important;
+}
+
+/* Hide inner controls when minimized to create a compact bar */
+body.app-minimized .checkin-bar .frutiger-aero-button,
+body.app-minimized .seeding-bar .frutiger-aero-button,
+body.app-minimized .pools-bar .frutiger-aero-button,
+body.app-minimized .de-bar .frutiger-aero-button,
+body.app-minimized .summary-bar .frutiger-aero-button,
+body.app-minimized .homepage-sub-bar .frutiger-aero-button {
+  display: none !important;
+}
+
+/* A small persistent restore button shown when minimized */
+.app-restore-btn {
+  position: fixed;
+  top: calc(30px + 80px - 29px);
+  left: var(--sub-bar-left-offset);
+  z-index: 11000;
+  min-width: 56px;
+  height: 32px;
+  padding: 6px 10px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  display: none; /* toggled by JS */
+}
+
+/* Maximize state: slightly emphasize the fixed bars */
+body.app-maximized .checkin-bar,
+body.app-maximized .seeding-bar,
+body.app-maximized .pools-bar,
+body.app-maximized .de-bar,
+body.app-maximized .summary-bar,
+body.app-maximized .homepage-sub-bar,
+body.app-maximized .date-card {
+  transform: scale(1.02) translateZ(0);
+  box-shadow: 0 6px 30px rgba(0,0,0,0.35);
+}
+
+/* Smooth transitions for these state changes */
+.checkin-bar,
+.seeding-bar,
+.pools-bar,
+.de-bar,
+.summary-bar,
+.homepage-sub-bar,
+.date-card,
+.pools-area,
+.seeding-area {
+  transition: left 180ms ease, transform 180ms ease, height 180ms ease, padding 180ms ease, opacity 180ms ease;
+}
+
+@media (max-width: 640px) {
+  /* On very small screens, keep controls usable: force normal layout */
+  body.app-minimized .app-restore-btn { display: inline-flex !important; }
+  :root { --sub-bar-left-offset: 12px; }
+  .app-restore-btn { left: 12px !important; }
 }
 
