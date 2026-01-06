@@ -76,9 +76,9 @@
   top: calc(30px + 80px - 27px + 120px);
   /* Center this wrapper to the same nominal width as the universal nav,
      then left-align its contents so cards sit under the nav's left content. */
-    left: 50%;
-    /* Shift the wrapper right by an additional 50px (user requested) */
-    transform: translateX(calc(-50% - 30px));
+  left: 50%;
+    /* Nudge further left so the wrapper's left edge sits under the nav */
+  transform: translateX(calc(-50% - 40px));
   width: 1138px;        /* match .glass-menu-bar nominal width */
   max-width: 95vw;
   box-sizing: border-box;

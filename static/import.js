@@ -26,8 +26,8 @@ document.addEventListener('DOMContentLoaded', () => {
           // Ensure any previously-stored persistent copy is removed so imports remain session-only
           try { localStorage.removeItem('fencingapp:fencers'); } catch (e) {}
           console.log(`${sourceName} parsed ${fencers.length} fencers`);
-          // Navigate to checkin so user can see the cards
-          location.href = '/checkin';
+          // Navigate to summary so user can see the tournament info first
+          location.href = '/summary';
         } catch (err) {
           console.error('Failed to parse CSV', err);
           alert('Failed to parse CSV file. Check the console for details.');
@@ -407,5 +407,19 @@ document.addEventListener('DOMContentLoaded', () => {
       usaInput.click();
     });
     handleFileSelection(usaInput, 'USA Fencing');
+  }
+
+  // Handle continue button to go back to last page
+  const continueBtn = document.getElementById('continue-btn');
+  if (continueBtn) {
+    continueBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const lastPage = sessionStorage.getItem('lastPage');
+      if (lastPage && lastPage !== '/') {
+        window.location.href = lastPage;
+      } else {
+        window.location.href = '/summary'; // fallback to summary if no last page
+      }
+    });
   }
 });

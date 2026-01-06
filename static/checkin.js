@@ -93,6 +93,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) { return (text||'').length * 8; }
   }
 
+  // Inline fallback removed: rely on CSS for hover/transition parity
+
   // Set a fixed width on an element based on a sample string. Width is set
   // as inline style and also assigned to minWidth and maxWidth to prevent
   // the element from changing size. Respects element padding/border by adding
@@ -208,6 +210,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // Keep the add-area visually small by default using a CSS class and
     // CSS variables. Avoid inline !important manipulations which can cause
     // layout flicker and conflicting transitions. We set `--start-w` and
+              // Inline hover fallback for this modal's Cancel button
+                // No inline hover fallback: let CSS handle hover transitions
     // `--max-w` here so CSS can control the narrow starting width until
     // the user explicitly hovers to expand.
     try {
@@ -1014,6 +1018,8 @@ document.addEventListener('DOMContentLoaded', () => {
           setTimeout(() => { try { if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); } catch (e) {} }, Math.max(0, Math.round(ms)));
         } catch (e) { setTimeout(() => { try { if (overlay && overlay.parentNode) overlay.parentNode.removeChild(overlay); } catch (e) {} }, 520); }
       };
+      // Attach temporary inline hover fallback so Cancel shows confirm glow
+        // Rely on CSS hover/transition for modal cancel/close glow (no inline fallback)
       const ok = card.querySelector('.modal-ok'); if (ok) ok.addEventListener('click', (e) => { e.preventDefault(); cleanup(); });
       overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(); });
     } catch (e) { console.error('showInfoModal error', e); }
@@ -1109,7 +1115,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="fencer-name"><span style="font-size:1.12rem;">Not all fencers are checked in!</span></div>
             <div class="fencer-meta" style="margin-top:8px; font-size:0.95rem; opacity:0.95;">You can continue to seeding now, but some fencers are not checked in. Do you want to continue anyway?</div>
             <div class="meta-actions" style="margin-top:14px; display:flex; gap:10px; justify-content:flex-end;">
-              <button class="frutiger-aero-button modal-cancel">Cancel</button>
+              <button class="frutiger-aero-button modal-cancel confirm-btn" style="--hue:0deg; --sat:0;">Cancel</button>
               <button class="frutiger-aero-button modal-continue" style="--hue:140deg;">Continue Anyways</button>
             </div>
           </div>
@@ -1272,7 +1278,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <div class="meta-row"><span class="meta-part meta-club" contenteditable="true" role="textbox" aria-label="Club" data-placeholder="Enter Attending Club"></span></div>
             </div>
             <div class="meta-actions">
-              <button class="frutiger-aero-button modal-cancel">Cancel</button>
+              <button class="frutiger-aero-button modal-cancel confirm-btn" style="--hue:0deg; --sat:0;">Cancel</button>
               <button class="frutiger-aero-button modal-confirm" style="--hue:140deg;">Confirm</button>
             </div>
           </div>

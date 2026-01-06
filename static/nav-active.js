@@ -36,6 +36,10 @@
   document.addEventListener('click', (ev) => {
     const a = ev.target.closest && ev.target.closest('a.nav-btn');
     if (!a) return;
+    // Store last page when clicking home
+    if (a.classList.contains('home-btn')) {
+      sessionStorage.setItem('lastPage', location.pathname);
+    }
     // small delay to allow navigation to proceed
     setTimeout(setActive, 10);
   }, {capture:true});

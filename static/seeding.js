@@ -150,7 +150,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <span class="meta-part meta-pool" contenteditable="true" role="textbox" aria-label="Pool number" data-placeholder="Enter Attending Pool" style="display:block;width:100%;"></span>
             </div>
             <div class="meta-actions">
-              <button class="frutiger-aero-button modal-cancel">Cancel</button>
+              <button class="frutiger-aero-button modal-cancel confirm-btn" style="--hue:0deg; --sat:0;">Cancel</button>
               <button class="frutiger-aero-button modal-confirm" style="--hue:140deg;">Confirm</button>
             </div>
           </div>
@@ -282,6 +282,8 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) { console.error('showAddFencerModal error', e); }
   }
 
+  // Inline fallback removed: rely on CSS for hover/transition parity
+
   function showCustomModal() {
     try {
       const fencers = loadFencers();
@@ -308,7 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <div class="meta-row" style="gap:8px; align-items:center; display:flex;"><span class="meta-part meta-custom-size" contenteditable="true" role="textbox" aria-label="Competitors in pool" data-placeholder="#" style="width:4.5ch;"></span><span style="display:flex; align-items:center;">Competitors in Pool</span></div>
           </div>
           <div class="meta-actions" style="justify-content:flex-end; gap:10px; margin-top:8px;">
-            <button class="frutiger-aero-button modal-cancel">Cancel</button>
+            <button class="frutiger-aero-button modal-cancel confirm-btn" style="--hue:0deg; --sat:0;">Cancel</button>
             <button class="frutiger-aero-button modal-confirm" style="--hue:140deg;">Apply</button>
           </div>
         </div>`;
@@ -678,10 +680,48 @@ document.addEventListener('DOMContentLoaded', () => {
         if (stripInput) {
           stripInput.addEventListener('mouseenter', () => focusAndSelect(stripInput));
           stripInput.addEventListener('touchstart', () => focusAndSelect(stripInput), { passive: true });
+          // Load persisted meta if present
+          try {
+            const metaRaw = sessionStorage.getItem(`fencingapp:seeding-pool-meta:${pIndex}`);
+            if (metaRaw) {
+              const meta = JSON.parse(metaRaw || '{}');
+              if (meta && meta.strip != null && stripInput.value === '') stripInput.value = String(meta.strip || '');
+            }
+          } catch (e) {}
+          // Persist and enable Save when user edits strip
+          stripInput.addEventListener('input', () => {
+            try {
+              const val = (stripInput.value || '').toString().trim();
+              const metaRaw = sessionStorage.getItem(`fencingapp:seeding-pool-meta:${pIndex}`) || '{}';
+              const meta = Object.assign({}, JSON.parse(metaRaw || '{}'));
+              meta.strip = val;
+              sessionStorage.setItem(`fencingapp:seeding-pool-meta:${pIndex}`, JSON.stringify(meta));
+              markDirty();
+            } catch (e) { console.error('persist strip meta failed', e); }
+          });
         }
         if (refInput) {
           refInput.addEventListener('mouseenter', () => focusAndSelect(refInput));
           refInput.addEventListener('touchstart', () => focusAndSelect(refInput), { passive: true });
+          // Load persisted meta if present
+          try {
+            const metaRaw = sessionStorage.getItem(`fencingapp:seeding-pool-meta:${pIndex}`);
+            if (metaRaw) {
+              const meta = JSON.parse(metaRaw || '{}');
+              if (meta && meta.referee != null && refInput.value === '') refInput.value = String(meta.referee || '');
+            }
+          } catch (e) {}
+          // Persist and enable Save when user edits referee
+          refInput.addEventListener('input', () => {
+            try {
+              const val = (refInput.value || '').toString().trim();
+              const metaRaw = sessionStorage.getItem(`fencingapp:seeding-pool-meta:${pIndex}`) || '{}';
+              const meta = Object.assign({}, JSON.parse(metaRaw || '{}'));
+              meta.referee = val;
+              sessionStorage.setItem(`fencingapp:seeding-pool-meta:${pIndex}`, JSON.stringify(meta));
+              markDirty();
+            } catch (e) { console.error('persist referee meta failed', e); }
+          });
         }
       } catch (e) {}
 
@@ -1059,7 +1099,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <input class="reason-input" type="text" placeholder="Type reason..." style="flex:1; min-width:200px; padding:6px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:inherit; outline:none; box-shadow:none;" />
           </div>
           <div class="meta-actions" style="display:flex; flex-direction:row; justify-content:flex-end; align-items:center; gap:14px;">
-            <button class="frutiger-aero-button modal-cancel">Cancel</button>
+            <button class="frutiger-aero-button modal-cancel confirm-btn" style="--hue:0deg; --sat:0;">Cancel</button>
             <button class="frutiger-aero-button modal-confirm" style="--hue:140deg;">Confirm</button>
           </div>
         </div>`;
@@ -1166,7 +1206,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="fencer-name"><span style="font-size:1.12rem; font-weight:700;">Would you like to save your changes and move on to Pools?</span></div>
           <div class="fencer-name"><span style="font-size:0.98rem; font-weight:400; line-height:1.4;">If not, continue editing Seeding to your preference.</span></div>
           <div class="meta-actions" style="display:flex; flex-direction:row; justify-content:flex-end; align-items:center; gap:14px;">
-            <button class="frutiger-aero-button modal-cancel">Cancel</button>
+            <button class="frutiger-aero-button modal-cancel confirm-btn">Cancel</button>
             <button class="frutiger-aero-button modal-confirm" style="--hue:140deg;">Save & Continue</button>
           </div>
         </div>`;

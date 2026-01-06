@@ -3,6 +3,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const moveFencerBtn = document.querySelector('.move-fencer-btn');
   const advancementBtn = document.querySelector('.advancement-btn');
   const connectDeviceBtn = document.querySelector('.connect-device-btn');
+  const printBtn = document.querySelector('.print-btn');
   const displayModeBtn = document.querySelector('.display-mode-btn');
   const saveBtn = document.querySelector('.save-btn');
   const output = document.getElementById('pools-output');
@@ -16,6 +17,82 @@ document.addEventListener('DOMContentLoaded', () => {
   let allPools = []; // Store all loaded pools
   let poolRemoveMode = false;
   let poolMoveMode = false;
+  // (No advancement cutoff by default) — advancement will be determined later if configured.
+
+  // Local HTML escape helper (keeps pools.js self-contained)
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"'`]/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;',"`":'&#96;'})[c]);
+  }
+
+  // --- Print helpers: split order list into columns before printing ---
+  function splitOrderForPrint(selector = '.order-list') {
+    try {
+      let list = document.querySelector(selector);
+      // fallback: try common order containers if specific selector not present
+      if (!list) {
+        const fallbacks = ['.order', '#order-list', '.order-output', '.order-print', '.overall-order', '.pairings', '.pairing-list'];
+        for (const s of fallbacks) {
+          const el = document.querySelector(s);
+          if (el && el.children && el.children.length > 6) { list = el; break; }
+        }
+      }
+      if (!list) return null;
+      // save original HTML so we can restore after print
+      if (!list.dataset._origHtml) list.dataset._origHtml = list.innerHTML;
+      const items = Array.from(list.children);
+      if (items.length === 0) return null;
+
+      const container = document.createElement('div');
+      container.className = 'order-print-columns';
+
+      let idx = 0;
+      const firstCol = document.createElement('div');
+      firstCol.className = 'col';
+      for (; idx < Math.min(12, items.length); idx++) firstCol.appendChild(items[idx]);
+      container.appendChild(firstCol);
+
+      while (idx < items.length) {
+        const col = document.createElement('div');
+        col.className = 'col';
+        for (let c = 0; c < 8 && idx < items.length; c++, idx++) {
+          col.appendChild(items[idx]);
+        }
+        container.appendChild(col);
+      }
+
+      list.innerHTML = '';
+      list.appendChild(container);
+      return list;
+    } catch (e) { console.error('splitOrderForPrint error', e); return null; }
+  }
+
+  function restoreOrderAfterPrint(selector = '.order-list') {
+    try {
+      let list = document.querySelector(selector);
+      if (!list) {
+        const fallbacks = ['.order', '#order-list', '.order-output', '.order-print', '.overall-order', '.pairings', '.pairing-list'];
+        for (const s of fallbacks) {
+          const el = document.querySelector(s);
+          if (el && el.dataset && el.dataset._origHtml) { list = el; break; }
+        }
+      }
+      if (!list) return;
+      if (list.dataset._origHtml) {
+        list.innerHTML = list.dataset._origHtml;
+        delete list.dataset._origHtml;
+      }
+    } catch (e) { console.error('restoreOrderAfterPrint error', e); }
+  }
+
+  if (typeof window !== 'undefined') {
+    window.addEventListener('beforeprint', () => { splitOrderForPrint('.order-list'); });
+    window.addEventListener('afterprint', () => { restoreOrderAfterPrint('.order-list'); });
+    // also support matchMedia for some browsers
+    try {
+      const m = window.matchMedia('print');
+      if (m) m.addListener((mq) => { if (mq.matches) splitOrderForPrint('.order-list'); else restoreOrderAfterPrint('.order-list'); });
+    } catch (e) {}
+  }
 
   function markDirty() {
     poolsDirty = true;
@@ -31,6 +108,26 @@ document.addEventListener('DOMContentLoaded', () => {
       saveBtn.disabled = true;
       saveBtn.classList.add('disabled');
     }
+  }
+
+  // Normalize nav-related body classes and nav button attributes when arriving at Pools page
+  function normalizeNavOnLoad() {
+    try {
+      const body = document.body;
+      if (!body) return;
+      // Remove classes that other pages may have left behind
+      ['summary-nav-disabled', 'checkin-nav-disabled', 'seeding-nav-muted'].forEach(c => { try { body.classList.remove(c); } catch(e){} });
+      // Ensure Pools-specific state is initialized
+      updatePoolsNavState();
+      // If pools are complete, ensure Results nav is active
+      const resultsBtn = document.querySelector('.results-btn');
+      if (resultsBtn) {
+        // Keep Results visually disabled on the universal nav regardless of pool completion
+        resultsBtn.classList.add('disabled');
+        try { resultsBtn.setAttribute('aria-disabled', 'true'); } catch(e){}
+        try { resultsBtn.setAttribute('tabindex', '-1'); } catch(e){}
+      }
+    } catch (e) { console.error('normalizeNavOnLoad error', e); }
   }
 
   function scoreKey(poolIndex) {
@@ -105,19 +202,458 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Update advancement button disabled state based on pool completion
   function updateAdvancementButtonState() {
-    if (advancementBtn) {
-      const isComplete = isPoolComplete();
-      if (isComplete) {
-        advancementBtn.classList.remove('disabled');
-        advancementBtn.removeAttribute('aria-disabled');
-        advancementBtn.disabled = false;
-      } else {
-        advancementBtn.classList.add('disabled');
-        advancementBtn.setAttribute('aria-disabled', 'true');
-        advancementBtn.disabled = true;
-      }
+    if (!advancementBtn) return;
+    const allComplete = areAllPoolsComplete();
+    if (allComplete) {
+      advancementBtn.classList.remove('disabled');
+      try { advancementBtn.removeAttribute('aria-disabled'); } catch(e){}
+      try { advancementBtn.removeAttribute('disabled'); } catch(e){}
+      try { advancementBtn.disabled = false; } catch(e){}
+      // Ensure pointer events are allowed so the button is clickable
+      try { advancementBtn.style.pointerEvents = 'auto'; } catch(e){}
+      try { document.body.classList.add('advancement-ready'); } catch(e){}
+      // Mirror activation logic used for DE nav: restore keyboard and visual state
+      try {
+        try { advancementBtn.removeAttribute('tabindex'); } catch(e){}
+        advancementBtn.style.removeProperty('--sat');
+        advancementBtn.style.removeProperty('--hue');
+        advancementBtn.style.removeProperty('--fg');
+        advancementBtn.style.removeProperty('--bg');
+        advancementBtn.style.removeProperty('--bg-dark');
+        advancementBtn.style.removeProperty('opacity');
+        advancementBtn.style.removeProperty('cursor');
+        advancementBtn.style.removeProperty('box-shadow');
+        advancementBtn.style.removeProperty('border-color');
+        advancementBtn.style.removeProperty('background');
+        advancementBtn.style.removeProperty('z-index');
+        advancementBtn.style.removeProperty('pointer-events');
+      } catch (e) {}
+    } else {
+      advancementBtn.classList.add('disabled');
+      advancementBtn.setAttribute('aria-disabled', 'true');
+      advancementBtn.disabled = true;
+      try { document.body.classList.remove('advancement-ready'); } catch(e){}
+      try { advancementBtn.setAttribute('tabindex', '-1'); } catch(e){}
     }
   }
+
+  // Compute ranking metrics across all pools and return sorted list
+  function computeAdvancementList() {
+    const entries = [];
+    if (!Array.isArray(allPools) || allPools.length === 0) return entries;
+    // For each pool, load scores and compute per-fencer stats
+    for (let pIdx = 0; pIdx < allPools.length; pIdx++) {
+      const pool = allPools[pIdx] || [];
+      const size = pool.length;
+      if (!size) continue;
+      const scores = loadPoolScores(pIdx, size);
+      for (let i = 0; i < size; i++) {
+        const f = pool[i];
+        const id = f && f.id ? f.id : `p${pIdx}-i${i}`;
+        let V = 0; let TS = 0; let TR = 0; let Attempts = 0;
+        for (let j = 0; j < size; j++) {
+          if (i === j) continue;
+          const a = parseInt(scores[i][j] || '0', 10) || 0;
+          const b = parseInt(scores[j][i] || '0', 10) || 0;
+          // Only count valid bouts (one score >=5 and scores differ)
+          if ((a >= 5 || b >= 5) && a !== b) {
+            Attempts += 1;
+            TS += a;
+            TR += b;
+            if (a > b) V += 1;
+          }
+        }
+        const VA = Attempts > 0 ? (V / Attempts) : 0;
+        const Indicator = TS - TR;
+        entries.push({ id, name: f && f.name ? f.name : '', seed: f && f.seed ? f.seed : null, poolIndex: pIdx, V, Attempts, VA, TS, TR, Indicator });
+      }
+    }
+    // Sort by: Win percentage (VA) desc, Indicator (TS-TR) desc, Touches Scored (TS) desc
+    entries.sort((a, b) => {
+      if (b.VA !== a.VA) return b.VA - a.VA;
+      if (b.Indicator !== a.Indicator) return b.Indicator - a.Indicator;
+      if (b.TS !== a.TS) return b.TS - a.TS;
+      return 0;
+    });
+
+    // After sorting, detect exact ties (VA, Indicator, TS equal). For tied blocks,
+    // shuffle their internal order randomly (placement is random but they share seed).
+    const N = entries.length;
+    let i = 0;
+    while (i < N) {
+      let j = i;
+      while (j + 1 < N && Math.abs(entries[j + 1].VA - entries[i].VA) < 1e-9 && entries[j + 1].Indicator === entries[i].Indicator && entries[j + 1].TS === entries[i].TS) {
+        j++;
+      }
+      if (j > i) {
+        // shuffle entries[i..j]
+        for (let k = j; k > i; k--) {
+          const r = i + Math.floor(Math.random() * (k - i + 1));
+          const tmp = entries[k]; entries[k] = entries[r]; entries[r] = tmp;
+        }
+      }
+      i = j + 1;
+    }
+
+    // Assign final seeding position (1..N), collapsing tied groups to the same position
+    let pos = 1;
+    i = 0;
+    while (i < N) {
+      let j = i;
+      while (j + 1 < N && Math.abs(entries[j + 1].VA - entries[i].VA) < 1e-9 && entries[j + 1].Indicator === entries[i].Indicator && entries[j + 1].TS === entries[i].TS) {
+        j++;
+      }
+      const groupSize = j - i + 1;
+      if (groupSize === 1) {
+        entries[i].finalSeedNum = pos;
+        entries[i].finalSeedDisplay = String(pos);
+      } else {
+        // tied group: all get same position with 'T'
+        for (let k = i; k <= j; k++) {
+          entries[k].finalSeedNum = pos;
+          entries[k].finalSeedDisplay = `${pos}T`;
+        }
+      }
+      // mark advances (100% by default)
+      for (let k = i; k <= j; k++) {
+        entries[k].advances = true;
+        entries[k].VApercent = entries[k].VA * 100;
+      }
+      pos += groupSize;
+      i = j + 1;
+    }
+    return entries;
+  }
+
+  // Build a print-friendly HTML for pools and open print dialog
+  // Generate round-robin pairings to ensure balanced bouts and prevent fatigue
+  function generateRoundRobinPairings(fencers) {
+    const pairings = [];
+    const n = fencers.length;
+    if (n < 2) return pairings;
+
+    // For odd number, add a bye
+    const hasBye = n % 2 === 1;
+    const participants = [...fencers];
+    if (hasBye) {
+      participants.push({ seed: 'BYE', name: 'BYE' });
+    }
+
+    const total = participants.length;
+    // Generate rounds using circle method
+    for (let round = 0; round < total - 1; round++) {
+      for (let i = 0; i < total / 2; i++) {
+        const a = participants[i];
+        const b = participants[total - 1 - i];
+        if (a.seed !== 'BYE' && b.seed !== 'BYE') {
+          pairings.push(`${a.seed} ${a.name} VS. ${b.seed} ${b.name}`);
+        }
+      }
+      // Rotate: move last to second position
+      const last = participants.pop();
+      participants.splice(1, 0, last);
+    }
+    return pairings;
+  }
+
+  // Show connect device modal for remote scoring
+  function showConnectDeviceModal() {
+    try {
+      if (!Array.isArray(allPools) || allPools.length === 0) {
+        alert('No pools available to connect devices.');
+        return;
+      }
+
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.setAttribute('role', 'dialog');
+      overlay.style.zIndex = 1220;
+
+      const card = document.createElement('article');
+      card.className = 'fencer-card modal-card add-fencer-modal connect-device-modal';
+      card.style.maxWidth = '800px';
+
+      // Pool buttons in grid
+      const poolButtons = allPools.map((pool, idx) => {
+        return `<button class="frutiger-aero-button pool-select-btn" data-pool-index="${idx}" style="--hue:280; justify-content:center;">Pool ${idx + 1} (${pool.length} Fencers)</button>`;
+      }).join('');
+
+      card.innerHTML = `
+        <div class="fencer-row">
+          <div class="fencer-left">
+            <div class="fencer-name"><span style="font-size:1.12rem; font-weight:700;">Connect multiple Devices for remote scoring!</span></div>
+            <div class="pool-buttons-grid" style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:12px; margin-top:12px;">
+              ${poolButtons}
+            </div>
+            <div class="meta-actions" style="margin-top:14px; display:flex; gap:10px; justify-content:flex-end;">
+              <button class="frutiger-aero-button modal-cancel">Cancel</button>
+            </div>
+          </div>
+          <div class="fencer-right">
+            <div class="qr-area" style="display:none; flex-direction:column; align-items:flex-start; gap:12px; margin-left:18px;">
+              <div class="qr-code" style="width:200px; height:200px; border:2px solid #000; display:flex; align-items:center; justify-content:center; font-size:1.5rem;">QR Code Placeholder</div>
+              <button class="frutiger-aero-button connection-status-btn" style="--hue:120;">Not Connected</button>
+            </div>
+          </div>
+        </div>`;
+
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+      requestAnimationFrame(() => { overlay.classList.add('modal-active'); card.classList.add('fade-enter-active'); });
+      document.body.classList.add('modal-open');
+
+      const cleanup = () => {
+        try { overlay.classList.remove('modal-active'); card.classList.remove('fade-enter-active'); document.body.classList.remove('modal-open'); setTimeout(() => { try { overlay && overlay.remove(); } catch(e) {} }, 520); } catch(e) {}
+      };
+
+      // Handle pool button clicks
+      card.addEventListener('click', (e) => {
+        const btn = e.target.closest('.pool-select-btn');
+        if (btn) {
+          const pIdx = parseInt(btn.dataset.poolIndex);
+          const qrArea = card.querySelector('.qr-area');
+          const qrCode = card.querySelector('.qr-code');
+          qrCode.innerHTML = `<img src="/qr?pool=${pIdx + 1}" alt="QR Code for Pool ${pIdx + 1}" style="width:100%; height:100%; object-fit:contain;">`;
+          qrArea.style.display = 'flex';
+          // Update connection status
+          const statusBtn = card.querySelector('.connection-status-btn');
+          statusBtn.textContent = 'Not Connected';
+          statusBtn.style.setProperty('--hue', '0'); // red
+        }
+      });
+
+      const cancelBtn = card.querySelector('.modal-cancel');
+      if (cancelBtn) cancelBtn.addEventListener('click', (e) => { e.preventDefault(); cleanup(); });
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(); });
+    } catch (e) { console.error('showConnectDeviceModal error', e); }
+  }
+
+  function showPrintView() {
+    try {
+      if (!Array.isArray(allPools) || allPools.length === 0) {
+        alert('No pools available to print.');
+        return;
+      }
+
+      const makeMatchList = (names) => {
+        const pairs = [];
+        const n = names.length;
+        let matchNo = 1;
+        for (let i = 0; i < n; i++) {
+          for (let j = i + 1; j < n; j++) {
+            pairs.push({ no: matchNo++, a: names[i], b: names[j] });
+          }
+        }
+        return pairs;
+      };
+
+      const escape = escapeHtml;
+
+      let html = `<!doctype html><html><head><meta charset="utf-8"><title>Pool Sheets</title>`;
+      html += `<style>
+        /* Black & white print-friendly styles */
+        body{font-family: Arial, Helvetica, sans-serif; color:#000; background:#fff; margin:18px; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+        h2{margin:6px 0 8px 0; font-size:18px}
+        .pool{page-break-inside:avoid; margin-bottom:28px; padding:12px; border:1px solid #000}
+        .fencer-list{display:block; margin-bottom:10px}
+        .fencer-row{display:flex; align-items:center; gap:12px; padding:6px 0; border-bottom:1px solid #ddd}
+        .num-box{width:36px; height:28px; border:1px solid #000; display:inline-block; text-align:center; vertical-align:middle}
+        .fencer-name{flex:1; font-weight:700}
+        .pairings{margin-top:12px}
+        .pairing{margin-bottom:10px; padding-bottom:6px; border-bottom:1px dashed #000}
+        .pairing-title{font-weight:700}
+        .pairing-score{margin-top:6px; font-family: monospace}
+        .page-controls{margin-bottom:12px}
+        /* Ensure blacked-out cells and any inline backgrounds print as solid */
+        td[style*="background"]{ background:#000 !important; color:#fff !important; -webkit-print-color-adjust:exact; print-color-adjust:exact }
+        *{ -webkit-print-color-adjust:exact; print-color-adjust:exact }
+        /* Order list printed as two columns for compact layout */
+        .order-list{ column-gap:18px; }
+        @media print { .no-print{display:none} .order-list{ column-count:2; }
+          .order-list > div { break-inside: avoid; page-break-inside: avoid; }
+        }
+      </style></head><body>`;
+
+      html += `<div class="no-print page-controls"><button onclick="window.print()">Print</button></div>`;
+
+      for (let pIdx = 0; pIdx < allPools.length; pIdx++) {
+        const pool = allPools[pIdx] || [];
+        // Helper: format stored name into "First LAST" where LAST is uppercase
+        const formatName = (raw) => {
+          if (!raw) return '';
+          const s = String(raw).trim();
+          // If comma-separated assume "Last, First" or similar
+          if (s.includes(',')) {
+            const parts = s.split(',').map(p => p.trim()).filter(Boolean);
+            const last = (parts[0] || '').toUpperCase();
+            const first = (parts[1] || '').replace(/\s+/g, ' ').trim();
+            return (first ? first + ' ' : '') + last;
+          }
+          const parts = s.split(/\s+/).filter(Boolean);
+          if (parts.length === 1) return parts[0];
+          const last = parts[parts.length - 1].toUpperCase();
+          const first = parts.slice(0, parts.length - 1).join(' ');
+          return (first ? first + ' ' : '') + last;
+        };
+        const names = pool.map((f, idx) => ({ seed: f && f.seed ? f.seed : (idx+1), rawName: f && f.name ? f.name : ('Fencer ' + (idx+1)), name: formatName(f && f.name ? f.name : ('Fencer ' + (idx+1))) }));
+        html += `<section class="pool"><h2>Pool ${pIdx + 1} — ${names.length} Fencers</h2>`;
+
+        // Determine longest formatted name to size the Fencer column
+        let maxLen = 0;
+        for (let i = 0; i < names.length; i++) {
+          const L = (names[i].name || '').length;
+          if (L > maxLen) maxLen = L;
+        }
+        const nameColWidthCh = Math.max(20, maxLen + 1); // at least 20ch
+
+        // Render fencer table: Seed # | Fencer | 1 | 2 | ... using colgroup
+        html += `<table style="width:100%; border-collapse:collapse; margin-bottom:10px;">
+            <colgroup>
+              <col style="width:80px">
+              <col style="width:${nameColWidthCh}ch">
+              ${Array(names.length).fill('<col style="width:60px">').join('')}
+            </colgroup>
+            <thead>
+              <tr>
+                <th style="border:1px solid #000; padding:6px;">Seed #</th>
+                <th style="border:1px solid #000; padding:6px;">Fencer</th>`;
+        for (let c = 0; c < names.length; c++) {
+          html += `<th style="border:1px solid #000; padding:6px; text-align:center">${c+1}</th>`;
+        }
+        html += `</tr></thead><tbody>`;
+        for (let i = 0; i < names.length; i++) {
+          const displayName = names[i].name;
+          html += `<tr>`;
+          html += `<td style="border:1px solid #000; padding:8px; text-align:center">${i+1}</td>`;
+          html += `<td style="border:1px solid #000; padding:8px">${escape(displayName)}</td>`;
+          for (let j = 0; j < names.length; j++) {
+            if (i === j) {
+              // Black out self cell (no bout vs self)
+              html += `<td style="border:1px solid #000; padding:8px; height:28px; background:#000"></td>`;
+            } else {
+              html += `<td style="border:1px solid #000; padding:8px; height:28px"></td>`;
+            }
+          }
+          html += `</tr>`;
+        }
+        html += `</tbody></table>`;
+
+        // Order: pairing list formatted as '1 Name VS. 2 Name'
+        const pairings = generateRoundRobinPairings(names);
+        html += `<div style="margin-top:12px; font-weight:700">Order:</div>`;
+        html += `<div class="order-list" style="margin-top:8px">`;
+        pairings.forEach(p => {
+          html += `<div style="margin:6px 0">${escape(p)}</div>`;
+        });
+        html += `</div>`;
+
+        html += `</section>`;
+      }
+
+      html += `</body></html>`;
+
+      const w = window.open('', '_blank');
+      if (!w) { alert('Popup blocked — allow popups to print.'); return; }
+      w.document.open();
+      w.document.write(html);
+      w.document.close();
+      // Give the new window a moment to render then call print
+      setTimeout(() => { try { w.focus(); w.print(); } catch (e) { console.error(e); } }, 250);
+
+    } catch (e) { console.error('showPrintView error', e); alert('Unable to open print view.'); }
+  }
+
+  // Show advancement modal with ranking grid
+  function showAdvancementModal() {
+    try {
+      const list = computeAdvancementList();
+      if (!list || list.length === 0) {
+        alert('No fencer data available to compute advancement.');
+        return;
+      }
+
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.setAttribute('role', 'dialog');
+      overlay.style.zIndex = 1260;
+
+      const card = document.createElement('article');
+      card.className = 'fencer-card modal-card advancement-modal';
+      // Header + subheader
+      const headerHtml = `
+        <div style="text-align:left; width:100%;">
+          <div style="font-size:1.12rem;font-weight:700; text-align:left;">You are viewing Advancement!</div>
+          <div style="margin-top:20px;">
+            <div class="advancement-grid-header" style="display:grid; grid-template-columns:48px 1fr 40px 64px 56px 56px 84px; gap:8px; align-items:center;">
+              <div class="adv-head-cell">Seed</div>
+              <div class="adv-head-cell">Fencer Name</div>
+              <div class="adv-head-cell" style="text-align:center">V</div>
+              <div class="adv-head-cell" style="text-align:center">V/A%</div>
+              <div class="adv-head-cell" style="text-align:center">TS</div>
+              <div class="adv-head-cell" style="text-align:center">TR</div>
+              <div class="adv-head-cell" style="text-align:center">Advance?</div>
+            </div>
+          </div>
+        </div>`;
+
+      // Build rows
+      const rowsHtml = list.map(it => {
+        const name = escapeHtml(it.name || '');
+        const seedDisplay = it.finalSeedDisplay || it.seed || it.finalSeed || '';
+        const v = it.V || 0;
+        const va = isFinite(it.VApercent) ? `${it.VApercent.toFixed(1)}%` : '0%';
+        const ts = it.TS || 0;
+        const tr = it.TR || 0;
+        const adv = it.advances ? 'Yes' : 'No';
+        return `<div class="adv-row" style="display:grid; grid-template-columns:48px 1fr 40px 64px 56px 56px 84px; gap:8px; align-items:center; padding:6px 0; border-bottom:1px solid rgba(255,255,255,0.04);">
+          <div class="adv-cell">${escapeHtml(String(seedDisplay))}</div>
+          <div class="adv-cell">${name}</div>
+          <div class="adv-cell" style="text-align:center">${v}</div>
+          <div class="adv-cell" style="text-align:center">${va}</div>
+          <div class="adv-cell" style="text-align:center">${ts}</div>
+          <div class="adv-cell" style="text-align:center">${tr}</div>
+          <div class="adv-cell" style="text-align:center">${adv}</div>
+        </div>`;
+      }).join('');
+
+      card.innerHTML = `
+        <div class="fencer-row" style="flex-direction:column; gap:12px;">
+          <div class="advancement-grid-container">
+            ${headerHtml}
+            <div class="advancement-rows" style="max-height:420px;">${rowsHtml}</div>
+          </div>
+          <div class="meta-actions" style="margin-top:12px; display:flex; justify-content:flex-end;
+            gap:10px;">
+            <button class="frutiger-aero-button modal-close confirm-btn">Close</button>
+          </div>
+        </div>`;
+
+      overlay.appendChild(card);
+      document.body.appendChild(overlay);
+      requestAnimationFrame(() => { overlay.classList.add('modal-active'); card.classList.add('fade-enter-active'); });
+      document.body.classList.add('modal-open');
+
+      const cleanup = () => {
+        try { overlay.classList.remove('modal-active'); card.classList.remove('fade-enter-active'); document.body.classList.remove('modal-open'); setTimeout(() => { try { overlay && overlay.remove(); } catch(e) {} }, 520); } catch(e) {}
+      };
+
+      const closeBtn = card.querySelector('.modal-close'); if (closeBtn) closeBtn.addEventListener('click', (e) => { e.preventDefault(); cleanup(); });
+      overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(); });
+    } catch (e) { console.error('showAdvancementModal error', e); }
+  }
+
+  // Wire print button to open print view
+  if (printBtn) {
+    printBtn.addEventListener('click', (e) => { e.preventDefault(); showPrintView(); });
+  }
+
+  // Wire connect device button
+  const connectBtn = document.querySelector('.connect-device-btn');
+  if (connectBtn) {
+    connectBtn.addEventListener('click', (e) => { e.preventDefault(); showConnectDeviceModal(); });
+  }
+
+  // Inline fallback removed: rely on CSS for hover/transition parity
 
   // Check if ALL pools are completely filled with valid scores
   function areAllPoolsComplete() {
@@ -144,8 +680,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const body = document.body;
     if (!body) return;
     const allComplete = areAllPoolsComplete();
-    if (allComplete) body.classList.remove('pools-nav-muted');
-    else body.classList.add('pools-nav-muted');
+    const deBtn = document.querySelector('.de-btn');
+    const resultsBtn = document.querySelector('.results-btn');
+    // Toggle `pools-nav-muted` so DE/Results become active when pools complete.
+    if (!allComplete) {
+      body.classList.add('pools-nav-muted');
+      if (deBtn) { deBtn.classList.add('disabled'); try { deBtn.setAttribute('aria-disabled', 'true'); } catch(e){} }
+      if (resultsBtn) { resultsBtn.classList.add('disabled'); try { resultsBtn.setAttribute('aria-disabled', 'true'); } catch(e){} }
+    } else {
+      body.classList.remove('pools-nav-muted');
+      if (deBtn) { deBtn.classList.remove('disabled'); try { deBtn.removeAttribute('aria-disabled'); } catch(e){} try { deBtn.removeAttribute('tabindex'); } catch(e){} }
+      // Even when all pools are complete, keep Results visually disabled per product decision
+      if (resultsBtn) { resultsBtn.classList.add('disabled'); try { resultsBtn.setAttribute('aria-disabled', 'true'); } catch(e){} try { resultsBtn.setAttribute('tabindex', '-1'); } catch(e){} }
+    }
   }
 
   // Return array of incomplete pool indices
@@ -201,7 +748,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="fencer-meta" style="font-size:0.95rem; opacity:0.95;">The following incomplete Pools will be deleted:</div>
           <div class="incomplete-pools-grid" style="display:grid; grid-template-columns:repeat(2, minmax(140px, 1fr)); gap:8px; align-items:center; margin-top:6px;">${poolButtonsHtml}</div>
           <div class="meta-actions" style="margin-top:12px; display:flex; gap:10px; justify-content:flex-end;">
-            <button class="frutiger-aero-button modal-cancel">Cancel</button>
+            <button class="frutiger-aero-button modal-cancel confirm-btn" style="--hue:0deg; --sat:0;">Cancel</button>
             <button class="frutiger-aero-button modal-continue" style="--hue:140;">Continue Regardless</button>
           </div>
         </div>`;
@@ -302,7 +849,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div class="fencer-name"><span style="font-size:1.12rem; font-weight:700;">Select a Pool</span></div>
           <div class="pool-buttons-grid">${poolButtons}</div>
           <div class="meta-actions" style="justify-content:flex-end; gap:10px; margin-top:8px;">
-            <button class="frutiger-aero-button modal-close">Close</button>
+            <button class="frutiger-aero-button modal-close confirm-btn">Close</button>
           </div>
         </div>`;
 
@@ -671,6 +1218,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Advancement button behavior is initialized later by `setupAdvancementButton()`
+
   // Add fencer modal for pools page
   function showAddFencerModal() {
     try {
@@ -697,7 +1246,7 @@ document.addEventListener('DOMContentLoaded', () => {
               <div class="meta-row"><span class="meta-part meta-club" contenteditable="true" role="textbox" aria-label="Club" data-placeholder="Enter Attending Club"></span></div>
             </div>
             <div class="meta-actions">
-              <button class="frutiger-aero-button modal-cancel">Cancel</button>
+              <button class="frutiger-aero-button modal-cancel confirm-btn" style="--hue:0deg; --sat:0;">Cancel</button>
               <button class="frutiger-aero-button modal-confirm" style="--hue:140deg;">Confirm</button>
             </div>
           </div>
@@ -839,12 +1388,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  if (advancementBtn) {
-    advancementBtn.addEventListener('click', () => {
-      console.log('Advancement button clicked');
-      // TODO: Implement advancement rules functionality
-    });
-  }
+  // Placeholder: advancement button setup will be handled by setupAdvancementButton()
 
   if (connectDeviceBtn) {
     connectDeviceBtn.addEventListener('click', () => {
@@ -871,9 +1415,63 @@ document.addEventListener('DOMContentLoaded', () => {
   markClean();
   allPools = loadPools();
   currentPoolIndex = 0;
+  // Normalize nav classes/attributes for Pools page
+  try { normalizeNavOnLoad(); } catch (e) {}
   updatePoolButtonText();
   renderCurrentPool();
   updatePoolsNavState();
+
+  // Setup a single, robust Advancement button handler and visual toggles
+  function setupAdvancementButton() {
+    try {
+      if (!advancementBtn) return;
+
+      // Set visual/accessible state according to pool completion
+      const refreshVisual = () => {
+        const allComplete = areAllPoolsComplete();
+        if (allComplete) {
+          advancementBtn.classList.remove('disabled');
+          try { advancementBtn.removeAttribute('aria-disabled'); } catch(e){}
+          try { advancementBtn.removeAttribute('tabindex'); } catch(e){}
+          try { advancementBtn.disabled = false; } catch(e){}
+          try { document.body.classList.add('advancement-ready'); } catch(e){}
+        } else {
+          advancementBtn.classList.add('disabled');
+          try { advancementBtn.setAttribute('aria-disabled', 'true'); } catch(e){}
+          try { advancementBtn.setAttribute('tabindex', '-1'); } catch(e){}
+          try { advancementBtn.disabled = true; } catch(e){}
+          try { document.body.classList.remove('advancement-ready'); } catch(e){}
+        }
+      };
+
+      // Click handler: show the advancement modal when data exists
+      const onClick = (e) => {
+        e && e.preventDefault();
+        try {
+          const list = computeAdvancementList();
+          if (Array.isArray(list) && list.length > 0) {
+            showAdvancementModal();
+          } else {
+            try { showInfoModal('Advancement is not available until all pools are complete.'); } catch (err) { try { alert('Advancement is not available until all pools are complete.'); } catch(e){} }
+          }
+        } catch (err) { console.error('Advancement click failed', err); }
+      };
+
+      // Ensure single listener
+      advancementBtn.removeEventListener('click', onClick);
+      advancementBtn.addEventListener('click', onClick);
+
+      // Refresh initially and when pool state may change
+      refreshVisual();
+      // Hook into the existing state update points by monkey-patching updateAdvancementButtonState
+      const origUpdate = updateAdvancementButtonState;
+      updateAdvancementButtonState = function() { try { origUpdate(); } catch(e){} try { refreshVisual(); } catch(e){} };
+    } catch (e) { console.error('setupAdvancementButton error', e); }
+  }
+
+  try { setupAdvancementButton(); } catch (e) {}
+
+  // advancement cutoff UI removed — default behavior: no cutoff
 
   // Delegate clicks for removal-mode to replicate seeding page behavior
   document.addEventListener('click', (e) => {
@@ -961,7 +1559,7 @@ document.addEventListener('DOMContentLoaded', () => {
           <div style="font-size:0.95rem; font-weight:400;">You are moving ${displayName} from Pool ${currentPoolIndex + 1}</div>
           <div class="pool-buttons-grid">${poolButtons}</div>
           <div class="meta-actions" style="justify-content:flex-end; gap:10px; margin-top:8px;">
-            <button class="frutiger-aero-button modal-cancel">Cancel</button>
+            <button class="frutiger-aero-button modal-cancel confirm-btn" style="--hue:0deg; --sat:0;">Cancel</button>
           </div>
         </div>`;
 
@@ -1046,7 +1644,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <label style="font-size:0.95rem;">Reason (optional):</label>
             <textarea class="removal-reason-input" rows="4" style="width:100%;box-sizing:border-box;padding:8px;border-radius:8px;border:1px solid rgba(0,0,0,0.12);"></textarea>
             <div style="display:flex;justify-content:flex-end;gap:10px;margin-top:6px;">
-              <button class="frutiger-aero-button modal-cancel">Cancel</button>
+              <button class="frutiger-aero-button modal-cancel confirm-btn" style="--hue:0deg; --sat:0;">Cancel</button>
               <button class="frutiger-aero-button modal-confirm" style="--hue:360;">Remove</button>
             </div>
           </div>`;
@@ -1103,7 +1701,7 @@ document.addEventListener('DOMContentLoaded', () => {
             <input class="reason-input" type="text" placeholder="Type reason..." style="flex:1; min-width:200px; padding:6px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:inherit; outline:none; box-shadow:none;" />
           </div>
           <div class="meta-actions" style="display:flex; flex-direction:row; justify-content:flex-end; align-items:center; gap:14px;">
-            <button class="frutiger-aero-button modal-cancel">Cancel</button>
+            <button class="frutiger-aero-button modal-cancel confirm-btn" style="--hue:0deg; --sat:0;">Cancel</button>
             <button class="frutiger-aero-button modal-confirm" style="--hue:140deg;">Confirm</button>
           </div>
         </div>`;
@@ -1183,6 +1781,29 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) { console.error('showRemoveFencerModal error', e); }
   }
 
+  // Poll localStorage for remote score updates
+  function pollRemoteScores() {
+    setInterval(() => {
+      try {
+        for (let pIdx = 0; pIdx < allPools.length; pIdx++) {
+          const key = 'fencingapp:pool-scores:' + pIdx;
+          const stored = localStorage.getItem(key);
+          if (stored) {
+            const remoteScores = JSON.parse(stored);
+            // Merge with current scores
+            const currentScores = loadPoolScores(pIdx, allPools[pIdx].length);
+            Object.assign(currentScores, remoteScores);
+            savePoolScores(pIdx, currentScores);
+            // Re-render if current pool
+            if (pIdx === currentPoolIndex) {
+              renderPool(currentPoolIndex);
+            }
+          }
+        }
+      } catch (e) { console.error('Poll remote scores error', e); }
+    }, 2000); // every 2 seconds
+  }
+
   // Wire up add-fencer button to pools page
   document.addEventListener('click', (e) => {
     try {
@@ -1193,4 +1814,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     } catch (err) { console.error('add-fencer button handler error', err); }
   });
+
+  // Start polling for remote updates
+  pollRemoteScores();
+
+  // Clean advancement initialization will be added below.
 });

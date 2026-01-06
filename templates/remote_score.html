@@ -1,0 +1,72 @@
+{% extends "base.html" %}
+{% block content %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='checkin.css') }}">
+  <style>
+    body { overflow: auto !important; }
+    .score-input { width: 40px; text-align: center; border: 1px solid #ccc; padding: 4px; }
+    .submit-btn { margin-top: 20px; }
+  </style>
+
+  <div class="pools-bar" role="region" aria-label="Remote Scoring" data-pool-id="{{ pool_id }}">
+    <h2>Remote Scoring for Pool {{ pool_id }}</h2>
+  </div>
+  <div class="pools-area">
+    <div id="remote-scoring-output" class="pools-output"></div>
+  </div>
+
+  <script>
+    const poolId = parseInt(document.querySelector('.pools-bar').dataset.poolId);
+    let allPools = JSON.parse(localStorage.getItem('fencingapp:pools') || '[]');
+    let pool = allPools[poolId - 1] || [];
+    let scores = JSON.parse(localStorage.getItem('fencingapp:pool-scores:' + (poolId - 1)) || '[]');
+
+    function renderRemoteScoring() {
+      const output = document.getElementById('remote-scoring-output');
+      if (!pool || pool.length === 0) {
+        output.innerHTML = '<p>No fencers in this pool.</p>';
+        return;
+      }
+
+      let html = '<table style="border-collapse: collapse; width: 100%;">';
+      html += '<thead><tr><th>Fencer</th>';
+      for (let j = 0; j < pool.length; j++) {
+        html += `<th>${j+1}</th>`;
+      }
+      html += '</tr></thead><tbody>';
+
+      for (let i = 0; i < pool.length; i++) {
+        html += `<tr><td>${pool[i].name}</td>`;
+        for (let j = 0; j < pool.length; j++) {
+          if (i === j) {
+            html += '<td style="background: #000;"></td>';
+          } else {
+            const scoreKey = `${i}-${j}`;
+            const currentScore = scores[scoreKey] || '';
+            html += `<td><input type="text" class="score-input" data-i="${i}" data-j="${j}" value="${currentScore}"></td>`;
+          }
+        }
+        html += '</tr>';
+      }
+      html += '</tbody></table>';
+      html += '<button class="frutiger-aero-button submit-btn">Submit Scores</button>';
+      output.innerHTML = html;
+
+      // Wire submit
+      document.querySelector('.submit-btn').addEventListener('click', () => {
+        const inputs = document.querySelectorAll('.score-input');
+        inputs.forEach(input => {
+          const i = input.dataset.i;
+          const j = input.dataset.j;
+          const val = input.value.trim();
+          if (val) {
+            scores[`${i}-${j}`] = val;
+          }
+        });
+        localStorage.setItem('fencingapp:pool-scores:' + (poolId - 1), JSON.stringify(scores));
+        alert('Scores submitted!');
+      });
+    }
+
+    renderRemoteScoring();
+  </script>
+{% endblock %}

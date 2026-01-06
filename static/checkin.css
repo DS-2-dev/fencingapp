@@ -1,7 +1,7 @@
 .checkin-bar {
-  width: 30%;
+  width: auto;
   margin: 30px auto;
-  padding: 18px 16px;
+  padding: 18px 20px;
   height: 30px;
   border-radius: 0 0 25px 25px;
   background: radial-gradient(
@@ -28,7 +28,7 @@
   z-index: 999;
   /* Never allow the fixed bar to cause horizontal overflow: cap its width
     relative to the viewport minus the left offset. Keeps layout stable. */
-  max-width: calc(100% - 120px);
+  max-width: calc(100% - 160px);
 
   --search-bar-duration: 220ms;
   transition: width var(--search-bar-duration, 300ms) ease;
@@ -58,7 +58,7 @@
     inset 0 0 40px rgba(255,255,255,0.08),
     0 4px 20px rgba(0,0,0,0.2);
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
   align-items: center;
   flex-direction: row;
   gap: 18px;
@@ -81,11 +81,23 @@
   align-items: center !important;
   justify-content: center !important;
   padding: 9px 20px !important;
-  border-radius: 24px !important;
-  font-size: 0.85rem !important;
+  border-radius: 27px !important;
+  font-weight: 500 !important;
+  font-size: 0.95rem !important;
   min-width: 96px !important;
   width: auto !important;
   max-width: none !important;
+  white-space: nowrap !important;
+}
+
+/* Enforce exact box model and minimum height to match the Summary bar buttons */
+.seeding-bar > .frutiger-aero-button,
+.seeding-bar .frutiger-aero-button {
+  box-sizing: border-box !important;
+  line-height: normal !important;
+  min-height: 36px !important;
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
 }
 
 /* Pools bar: same glass/card visual matching seeding and checkin bars,
@@ -252,14 +264,14 @@
 /* Button sizing inside seeding bar: give more room and comfortable padding */
 .seeding-bar .frutiger-aero-button {
   /* Match summary bar button sizing so gaps match visually */
-  padding: 10px 22px;
+  padding: 9px 20px;
   border-radius: 27px;
   font-weight: 500;
   font-size: 0.95rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 105px;
+  min-width: 96px;
   white-space: nowrap;
   width: auto !important;
   max-width: none !important;
@@ -283,7 +295,8 @@
 /* Increased padding/length for specific pools buttons */
 .pools-bar .move-fencer-btn,
 .pools-bar .advancement-btn,
-.pools-bar .connect-device-btn {
+.pools-bar .connect-device-btn,
+.pools-bar .print-btn {
   padding: 9px 26px;
   min-width: 135px;
 }
@@ -318,9 +331,27 @@
 .advancement-btn:hover {
   box-shadow: none;
   transform: none;
-  cursor: auto !important;
+}
+
+/* When Advancement is disabled/not-ready, show not-allowed cursor consistently
+   and avoid pointer flicker by keeping pointer-events stable. */
+.pools-bar .advancement-btn.disabled,
+.pools-bar .advancement-btn[aria-disabled="true"],
+body:not(.advancement-ready) .pools-bar .advancement-btn {
+  cursor: default !important;
+  pointer-events: auto !important; /* allow JS interception while keeping a regular cursor */
+  box-shadow: none !important;
 }
 .connect-device-btn { --hue: 180; --sat: 0.22; } /* cyan */
+
+/* Print button: match frutiger visuals, slightly wider and neutral blue hue */
+.print-btn { --hue: 200; --sat: 0.22; }
+/* Slightly reduce visual footprint of Print button */
+.pools-bar .print-btn {
+  padding: 9px 18px; /* match vertical padding of other pool buttons */
+  min-width: 112px;
+  /* Do not force height; allow the button to size the same as its siblings */
+}
 
 .save-btn { --hue: 140; --sat: 0.22; } /* green */
 .save-btn:active { transform: none; }
@@ -934,6 +965,51 @@ body.removal-mode-active .remove-copy-btn {
 /* Slightly de-emphasize background content when modal open */
 body.modal-open { overflow: hidden; }
 
+/* Advancement modal grid header and cells (boxed appearance) */
+.advancement-grid-header .adv-head-cell {
+  padding: 6px 8px;
+  background: rgba(255,255,255,0.02);
+  border-radius: 6px;
+  font-weight: 600;
+}
+
+.adv-row .adv-cell {
+  padding: 6px 8px;
+}
+
+/* Slightly wider advancement modal so header text doesn't truncate */
+.modal-card.advancement-modal {
+  /* Scooch both sides inward by 10px: increase horizontal inset and adjust inner padding */
+  width: min(660px, calc(100% - 84px));
+  max-width: 92%;
+  padding: 20px 20px 20px 20px; /* top right bottom left — 20px horizontal gutters */
+  transform: translateY(-18px) translateX(24px);
+}
+.modal-card.advancement-modal.fade-enter-active {
+  transform: translateY(0) translateX(24px);
+}
+
+/* Ensure grid header and rows use matching alignment and cell layout */
+.advancement-grid-header, .adv-row {
+  box-sizing: border-box;
+}
+.advancement-grid-header .adv-head-cell,
+.adv-row .adv-cell {
+  display: flex;
+  align-items: center;
+}
+
+/* Scrolling rows container for Advancement modal: reserve gutter so header stays aligned */
+.advancement-rows {
+  max-height: 420px;
+  overflow: auto;
+  scrollbar-gutter: stable;
+  margin-top: 4px;
+  padding-right: 0px; /* remove extra right padding to tuck content fully inward */
+}
+
+.advancement-grid-container { display: flex; flex-direction: column; gap: 6px; }
+
 /* Placeholder styling for the add-card editable fields */
 .add-fencer-card [contenteditable][data-placeholder]:empty::before {
   content: attr(data-placeholder);
@@ -963,6 +1039,52 @@ body.modal-open { overflow: hidden; }
   content: attr(data-placeholder);
   color: rgba(255,255,255,0.6);
   opacity: 0.95;
+}
+
+/* Connect Device modal: left-aligned content to match Seeding modal */
+.modal-card.connect-device-modal {
+  width: min(820px, calc(100% - 48px));
+  padding: 20px 22px;
+}
+.modal-card.connect-device-modal .fencer-row {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+.modal-card.connect-device-modal .fencer-left {
+  flex: 1 1 auto;
+  box-sizing: border-box;
+}
+.modal-card.connect-device-modal .fencer-right {
+  flex: 0 0 240px;
+  box-sizing: border-box;
+}
+.modal-card.connect-device-modal .pool-buttons-grid { margin-top: 8px; }
+.modal-card.connect-device-modal .qr-area { width: 100%; }
+
+/* Print helpers: ensure backgrounds/colors print and hide UI chrome */
+@media print {
+  html, body { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; }
+  /* Hide non-print UI */
+  .no-print, .nav-btn, .glass-menu-bar, .modal-overlay { display: none !important; }
+  /* Force blackout boxes to render as solid black in print */
+  .blacked-out, .blackout, .blocked, .fill-black {
+    background-color: #000 !important;
+    color: #fff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  /* Also force any inline-styled background cells to print as solid black */
+  [style*="background:#000"], [style*="background:#000;"], [style*="background: #000"], [style*="background-color:#000"], td[style*="background"] {
+    background-color: #000 !important;
+    color: #fff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  /* Order print columns container */
+  .order-print-columns { display: flex !important; gap: 12px !important; }
+  .order-print-columns .col { break-inside: avoid; page-break-inside: avoid; }
 }
 /* Make modal fields look like boxed text inputs (visible box rather than bare line) */
 .modal-card.add-fencer-modal .fencer-fullname {
@@ -1013,7 +1135,7 @@ body.modal-open { overflow: hidden; }
 }
 .modal-card.add-fencer-modal .meta-year { width: 140px; }
 .modal-card.add-fencer-modal .meta-rank { width: 18ch; }
-.modal-card.add-fencer-modal .meta-club { width: 354px}
+.modal-card.add-fencer-modal .meta-club { width: 354px; }
 .modal-card.add-fencer-modal .meta-pool { width: 70px; }
 .modal-card.add-fencer-modal .meta-part[data-placeholder]:empty::before { content: attr(data-placeholder); color: rgba(255,255,255,0.65); }
 .modal-card.add-fencer-modal .meta-part:hover,
@@ -1095,7 +1217,7 @@ body.modal-open { overflow: hidden; }
   border-radius: 30px;
   font-weight: 500; /* match global frutiger button weight */
   align-self: center;
-  width: var(--confirm-w, 180px);
+  width: var(--confirm-w, 560px);
   box-sizing: border-box;
   transition: width var(--add-area-duration, 240ms) var(--add-card-easing, cubic-bezier(.16,1,.3,1)), padding var(--add-area-duration, 240ms) ease, box-shadow 260ms cubic-bezier(.16,1,.3,1), background 260ms ease;
 }
@@ -1120,6 +1242,44 @@ body.modal-open { overflow: hidden; }
 
 /* Fade-into-glow hover like other frutiger-aero buttons */
 .add-fencer-card .frutiger-aero-button.confirm-btn:hover {
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65);
+  transform: none;
+}
+
+/* Global confirm-btn hover parity so any element with confirm-btn shows the same glow */
+.frutiger-aero-button.confirm-btn:hover {
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65);
+  transform: none;
+}
+
+/* Copy confirm/save button base + hover to modal cancel/close so they
+   use identical transitions and glow. Adjust color via --hue if needed. */
+.modal-card .meta-actions .frutiger-aero-button.modal-cancel,
+.frutiger-aero-button.modal-cancel,
+.modal-card .meta-actions .frutiger-aero-button.modal-close,
+.frutiger-aero-button.modal-close {
+  --hue: 25deg !important;
+  --sat: 0.22;
+  --glow-intensity: 0.45;
+  padding: 12px 22px;
+  border-radius: 30px;
+  font-weight: 500;
+  align-self: center;
+  box-sizing: border-box;
+  /* Keep original weight and match transition timing only; remove added text-shadow */
+  font-weight: 500;
+  transition: all 300ms ease;
+  --bg: oklch(75% var(--sat) var(--hue) / 0.8);
+  --bg-dark: oklch(45% var(--sat) var(--hue) / 0.75);
+  --bottom-glow: radial-gradient(farthest-corner at bottom center, rgba(255,255,255,var(--glow-intensity)), transparent);
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg));
+  border: 1px solid var(--bg);
+  color: white;
+}
+.modal-card .meta-actions .frutiger-aero-button.modal-cancel:hover,
+.frutiger-aero-button.modal-cancel:hover,
+.modal-card .meta-actions .frutiger-aero-button.modal-close:hover,
+.frutiger-aero-button.modal-close:hover {
   box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65);
   transform: none;
 }
@@ -1273,7 +1433,6 @@ body.modal-open { overflow: hidden; }
 .checkin-bar .frutiger-aero-button:last-child[contenteditable] {
   padding: 9px 20px !important;
   font-size: 0.95rem !important;
-  line-height: 1 !important;
   min-width: 96px !important;
   width: auto !important;
   max-width: none !important;
@@ -1284,7 +1443,6 @@ body.modal-open { overflow: hidden; }
   padding: 9px 20px !important;
   border-radius: 24px !important;
   font-size: 0.95rem !important;
-  line-height: 1 !important;
   min-width: 96px !important;
   width: auto !important;
   max-width: none !important;
@@ -1296,11 +1454,6 @@ body.modal-open { overflow: hidden; }
   transition: none !important;
   width: auto !important;
   max-width: none !important;
-}
-
-/* Expand the whole bar when the search control is hovered or focused */
-.checkin-bar:has(.frutiger-aero-button[role="searchbox"]:hover, .frutiger-aero-button[role="searchbox"]:focus) {
-  width: 30.6% !important;
 }
 
 /* Remove default focus outline and keep the glow when the checkin control is focused */
@@ -1701,6 +1854,13 @@ body.modal-open { overflow: hidden; }
 
 .score-cell input.score-input::placeholder { color: rgba(255,255,255,0.4); }
 
+/* Ensure strip and referee input placeholders are visible (white) */
+.strip-input::placeholder,
+.referee-input::placeholder {
+  color: rgba(255,255,255,0.92);
+  opacity: 0.95;
+}
+
 .score-input-error {
   border-color: rgba(255, 100, 100, 0.6) !important;
   box-shadow: inset 0 0 12px rgba(255,255,255,0.04), 0 0 8px rgba(255, 100, 100, 0.4) !important;
@@ -1739,11 +1899,8 @@ body.modal-open { overflow: hidden; }
   border-radius: 10px;
 }
 
-.pool-fencer-list-container {
-  margin-top: 8px;
-  padding-top: 16px;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-}
+.advancement-grid-container { display: flex; flex-direction: column; gap: 4px; }
+.advancement-rows { margin-top: 8px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); }
 
 .pool-buttons-grid {
   display: grid;
@@ -1852,4 +2009,157 @@ body.modal-open { overflow: hidden; }
   color: rgba(255, 255, 255, 0.65);
   margin-left: 44px;
   line-height: 1.3;
+}
+
+/* Modal cancel/close buttons: apply the Frutiger Aero button visuals so
+   cancel actions match buttons elsewhere. Use OKLCH variables so hue/sat
+   can be overridden if needed. */
+.modal-card .meta-actions .modal-close,
+.modal-card .meta-actions .modal-cancel,
+.modal-card .meta-actions .cancel-btn {
+  /* Pill-shaped neutral Cancel/Close style (matches provided screenshot):
+     glossy top highlight, subtle outer shadow, and desaturated gray body. */
+  --sat: 0; /* desaturated */
+  --hue: 0deg;
+  --fg: rgba(255,255,255,0.96);
+  --bg: oklch(82% var(--sat) var(--hue) / 0.96);
+  --bg-dark: oklch(62% var(--sat) var(--hue) / 0.94);
+  --bottom-glow: radial-gradient(farthest-corner at bottom center, rgba(255,255,255,0.36), transparent);
+
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg));
+  border: 1px solid rgba(255,255,255,0.18);
+  color: var(--fg);
+  padding: 12px 30px;
+  height: 44px;
+  line-height: 20px;
+  border-radius: 28px;
+  min-width: 96px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: inset 0 6px 18px rgba(255,255,255,0.04), 0 8px 22px rgba(0,0,0,0.22);
+  text-shadow: 0 1px 0 rgba(0,0,0,0.12);
+  /* Match confirm/save button transition timing and easing */
+  transition: box-shadow 260ms cubic-bezier(.16,1,.3,1), background 260ms ease, transform 160ms ease;
+}
+
+/* Broader catch-all: ensure any frutiger-aero button used as a modal cancel/close
+   (including those not nested under .meta-actions) inherits the same
+   visual variables and hover behaviour as confirm/save buttons. */
+.frutiger-aero-button.modal-cancel,
+.frutiger-aero-button.modal-close {
+  --sat: 0; /* neutral gray */
+  --hue: 0deg;
+  --fg: rgba(255,255,255,0.96);
+  --bg: oklch(82% var(--sat) var(--hue) / 0.96);
+  --bg-dark: oklch(62% var(--sat) var(--hue) / 0.94);
+  --bottom-glow: radial-gradient(farthest-corner at bottom center, rgba(255,255,255,0.36), transparent);
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg));
+  border: 1px solid rgba(255,255,255,0.18);
+  color: var(--fg);
+  transition: box-shadow 260ms cubic-bezier(.16,1,.3,1), background 260ms ease, transform 160ms ease;
+}
+
+/* Hover parity with other frutiger buttons */
+.frutiger-aero-button.modal-cancel:hover,
+.frutiger-aero-button.modal-close:hover {
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65);
+  transform: none;
+}
+
+/* Hover/focus: softly fade into a modest white glow (animated via box-shadow).
+   Use lower alpha than the global white glow so the cancel button doesn't
+   jump to a bright white halo; transition is already defined on the base
+   rule to produce a smooth fade-in effect. */
+.modal-card .meta-actions .modal-close:hover,
+.modal-card .meta-actions .modal-close:focus,
+.modal-card .meta-actions .modal-cancel:hover,
+.modal-card .meta-actions .modal-cancel:focus,
+.modal-card .meta-actions .cancel-btn:hover,
+.modal-card .meta-actions .cancel-btn:focus {
+  /* Exact same hover glow as confirm/save buttons */
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65);
+  transform: none;
+  outline: none;
+}
+
+/* Final override: force exact parity with confirm/save buttons using !important.
+   This ensures no other selector can cause a different hover appearance. */
+.frutiger-aero-button.modal-cancel,
+.frutiger-aero-button.modal-close {
+  /* Exact same base box-shadow and transition as frutiger-aero-button */
+  box-shadow: 0 4px 4px rgba(0,0,0,0.4);
+  transition: box-shadow 300ms ease, background 300ms ease, transform 300ms ease;
+}
+.frutiger-aero-button.modal-cancel:hover,
+.frutiger-aero-button.modal-close:hover {
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65) !important;
+  transform: none !important;
+}
+
+/* Make all modal Cancel/Close buttons identical to confirm/continue buttons. */
+.frutiger-aero-button.modal-cancel,
+.frutiger-aero-button.modal-close,
+.modal-card .meta-actions .frutiger-aero-button.modal-cancel,
+.modal-card .meta-actions .frutiger-aero-button.modal-close {
+  --hue: 140deg !important;
+  --sat: 0.22 !important;
+  /* Use default background, border, and color like confirm buttons */
+}
+.frutiger-aero-button.modal-cancel:hover,
+.frutiger-aero-button.modal-close:hover,
+.modal-card .meta-actions .frutiger-aero-button.modal-cancel:hover,
+.modal-card .meta-actions .frutiger-aero-button.modal-close:hover {
+  /* Keep the hover glow white like confirm/save buttons; only the static button is red. */
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65) !important;
+  transform: none !important;
+}
+
+/* Advancement modal: make the Close button a full-width frutiger-style
+   cancel action at the bottom to match other modals' layout. */
+.modal-card.advancement-modal .meta-actions {
+  /* Keep actions in a row for the advancement modal and match the
+     seeding modal button sizing (no forced full-width). */
+  display: flex;
+  gap: 10px;
+  flex-direction: row;
+  justify-content: flex-end;
+}
+.modal-card.advancement-modal .meta-actions .modal-close,
+.modal-card.advancement-modal .meta-actions .modal-cancel {
+  width: var(--confirm-w, 560px);
+  height: 44px;
+  padding: 0 18px;
+}
+
+/* Final authoritative parity: copy confirm/continue button visuals exactly
+   onto modal cancel/close buttons so hover easing and box-shadow match. */
+.modal-card .meta-actions .frutiger-aero-button.modal-cancel,
+.frutiger-aero-button.modal-cancel,
+.modal-card .meta-actions .frutiger-aero-button.modal-close,
+.frutiger-aero-button.modal-close {
+  --hue: 0deg !important;
+  --sat: 0.35 !important;
+  --glow-intensity: 0.45 !important;
+  padding: 12px 22px !important;
+  border-radius: 30px !important;
+  font-weight: 500 !important;
+  align-self: center !important;
+  box-sizing: border-box !important;
+  box-shadow: 0 4px 4px rgba(0,0,0,0.4) !important;
+  transition: all 300ms ease !important;
+}
+.modal-card .meta-actions .frutiger-aero-button.modal-cancel:hover,
+.frutiger-aero-button.modal-cancel:hover,
+.modal-card .meta-actions .frutiger-aero-button.modal-close:hover,
+.frutiger-aero-button.modal-close:hover {
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65) !important;
+  transform: none !important;
+}
+
+/* Make Check-in All button green */
+.checkin-all-btn {
+  --hue: 120;
+  --sat: 0.22;
 }

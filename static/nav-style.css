@@ -378,6 +378,14 @@
 .events-btn { --hue: 270deg; }
 .display-mode-btn { --hue: 200deg; }
 
+/* Ensure Results nav button is non-clickable and shows disabled cursor when disabled */
+.results-btn.disabled,
+.results-btn[aria-disabled="true"] {
+  cursor: not-allowed !important;
+  pointer-events: none !important;
+  box-shadow: none !important;
+}
+
 /* Make the nav Remove copy visually pink (distinct from Events) */
 .remove-copy-btn {
   --hue: 330deg; /* pink/magenta hue */
@@ -397,6 +405,31 @@
   box-shadow: 0 0 18px currentColor, 0 0 30px currentColor;
   transform: translateZ(0) scale(1.02);
 }
+
+/* Ensure Advancement button is clickable when pools are complete.
+   Modal overlays use z-index up to ~1260; give the Advancement button
+   a higher stacking context only when `body.advancement-ready` is set. */
+body .advancement-btn { position: relative; }
+body.advancement-ready .advancement-btn {
+  pointer-events: auto !important;
+  z-index: 1305;
+}
+
+/* When advancement is ready, give it the same interactive look-and-feel
+   as other nav buttons: pointer cursor, hover glow and slight scale. */
+body.advancement-ready .advancement-btn {
+  --sat: 0.22;
+  --hue: 305deg; /* match Pools hue */
+  cursor: pointer !important;
+  transition: all 220ms ease !important;
+  box-shadow: 0 4px 4px rgba(0,0,0,0.4);
+  transform: translateZ(0);
+}
+body.advancement-ready .advancement-btn:hover {
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65) !important;
+  transform: translateZ(0) !important;
+}
+body.advancement-ready .advancement-btn:active { transform: translateZ(0) !important; }
 
 
 /* Shared nav button base style */

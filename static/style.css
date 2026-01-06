@@ -1,5 +1,5 @@
 body {
-  background-color: rgb(73, 23, 41);
+  background-color: rgb(0, 0, 0);
   /*url(https://luciellong.com/wp-content/uploads/2021/09/tableau-peinture-escrime-sport-art-jeux-olympiques-tokyo-medaille-or.jpg); */
   background-size: cover;
   background-position: center;
@@ -15,46 +15,93 @@ body {
   position: relative;
 }
 
+/* Hide any remaining h1 on the homepage template */
+.home-page h1 {
+  display: none !important;
+}
+
 /* Simulated magnified blur layer */
 
 
-.outer-glass {
-  position: relative;
-
+.inner-glass {
+  position: absolute;
+  top: 50%;
+  left: 60px;
+  transform: translateY(-50%);
   border-radius: 30px;
-  padding: 50px;
-  width: 670px;
- 
+  padding: 30px 0; /* left/right decreased to 0 */
+  width: 360px; /* reduced width more */
+  height: 250px; /* more reduced height */
+  max-height: 350px;
+  min-height: 150px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   text-align: center;
   overflow: hidden;
   z-index: 2;
-}
 
-.outer-glass h1 {
-  font-size: 2.8rem;
-  margin-bottom: 40px;
-  color: #ffffff;
-  position: relative;
-  z-index: 3;
-}
-
-.inner-glass {
   background: radial-gradient(
     circle at top left,
     rgba(255, 255, 255, 0.3),
     rgba(255, 255, 255, 0.1)
   );
-  border-radius: 20px;
-  padding: 30px;
   backdrop-filter: blur(20px) saturate(200%) contrast(130%);
   -webkit-backdrop-filter: blur(60px) saturate(300%) contrast(130%);
   border: 1px solid rgba(255, 255, 255, 0.35);
   box-shadow:
     inset 0 0 40px rgba(255, 255, 255, 0.08),
     0 4px 20px rgba(0, 0, 0, 0.2);
-  position: relative;
-  z-index: 3;
 }
+
+/* Homepage sub bar: positioned below the main card */
+.homepage-sub-bar {
+  position: absolute;
+  top: calc(50% + 125px); /* touching the card bottom */
+  left: calc(2.5% + 96px); /* match summary bar left position */
+  width: auto; /* size to content */
+  margin: 30px 0;
+  padding: 18px 20px;
+  height: 30px;
+  border-radius: 0 0 25px 25px;
+  background: radial-gradient(
+    circle at top left,
+    rgba(255, 255, 255, 0.3),
+    rgba(255, 255, 255, 0.1)
+  );
+  backdrop-filter: blur(20px) saturate(200%) contrast(130%);
+  -webkit-backdrop-filter: blur(60px) saturate(300%) contrast(130%);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow:
+    inset 0 0 40px rgba(255, 255, 255, 0.08),
+    0 4px 20px rgba(0, 0, 0, 0.2);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  gap: 18px;
+  z-index: 2;
+  max-width: calc(100% - 160px); /* match summary bar max-width */
+  transition: none;
+}
+
+/* Circular buttons in the sub bar */
+.homepage-sub-bar .circle-btn {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 500;
+  min-width: auto;
+  max-width: none;
+}
+
+.homepage-sub-bar .circle-btn:first-child { --hue: 270; } /* Purple */
+.homepage-sub-bar .circle-btn:nth-child(2) { --hue: 0; } /* Red */
 
 .button-grid {
   display: flex;

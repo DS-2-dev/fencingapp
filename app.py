@@ -1,9 +1,23 @@
-from flask import Flask, render_template, redirect, url_for
+from flask import Flask, render_template, redirect, url_for, request, send_file
 import os
 import xml.etree.ElementTree as ET
 from glob import glob
+import qrcode
+from io import BytesIO
+import socket
 
 app = Flask(__name__)
+
+def get_local_ip():
+    try:
+        # Create a socket to connect to an external server
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))
+        ip = s.getsockname()[0]
+        s.close()
+        return ip
+    except:
+        return "127.0.0.1"
 
 # Home page (index.html)
 @app.route('/')
@@ -104,6 +118,22 @@ def seeding():
 def pools():
     return render_template('pools.html', title="Pools")
 
+@app.route('/remote-score')
+def remote_score():
+    pool_id = request.args.get('pool', '1')
+    return render_template('remote_score.html', title=f"Remote Score Pool {pool_id}", pool_id=pool_id)
+
+@app.route('/qr')
+def qr():
+    pool = request.args.get('pool', '1')
+    ip = get_local_ip()
+    url = f"http://{ip}:8000/remote-score?pool={pool}"
+    img = qrcode.make(url)
+    buf = BytesIO()
+    img.save(buf, format='PNG')
+    buf.seek(0)
+    return send_file(buf, mimetype='image/png')
+
 @app.route('/de')
 def de():
     return render_template('de.html', title="DE")
@@ -116,4 +146,4 @@ def cont():
     return redirect(url_for('seeding'))
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(host='0.0.0.0', port=8000, debug=False)
