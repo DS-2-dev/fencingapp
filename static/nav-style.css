@@ -131,7 +131,7 @@
   top: 20px;                       /* distance from the very top */
   left: 50%;                       /* anchor to the horizontal center */
   transform: translateX(-50%);     /* shift back by half its width */
-  width: 1138px;                   /* align with checkin bar left edge */
+  width: var(--menu-width);         /* align with sub-bars via --menu-width */
   max-width: 95vw;                 /* stay within viewport on smaller screens */
   
   background: radial-gradient(
@@ -147,7 +147,7 @@
   inset 0 0 40px rgba(255, 255, 255, 0.08),
   0 4px 20px rgba(0, 0, 0, 0.2);
   
-  padding: 20px 60px 20px 20px;
+  padding: 20px 60px 20px var(--menu-padding-left);
   display: flex;
   justify-content: center;
   align-items: center;

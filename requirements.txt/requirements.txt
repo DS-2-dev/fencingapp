@@ -1,2 +1,4 @@
 flask
 qrcode
+flask-socketio
+eventlet

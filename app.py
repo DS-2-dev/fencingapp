@@ -5,8 +5,42 @@ from glob import glob
 import qrcode
 from io import BytesIO
 import socket
+import time
+import hmac
+import hashlib
+import base64
+try:
+    from flask_socketio import SocketIO, join_room
+    SOCKETIO_AVAILABLE = True
+except Exception:
+    # flask_socketio not installed in this environment — provide safe fallbacks
+    SocketIO = None
+    def join_room(room):
+        return None
+    SOCKETIO_AVAILABLE = False
 
 app = Flask(__name__)
+
+# Simple in-memory store for remote-submitted scores.
+# Keys are pool indices (0-based) -> dict of score entries.
+remote_scores_store = {}
+# Server secret for signing QR tokens. In production set via env var.
+SECRET_KEY = os.environ.get('FENCINGAPP_SECRET') or hashlib.sha256(b'fencingapp_default_secret').hexdigest().encode()
+
+# Socket.IO for real-time remote scoring (may be unavailable)
+if SOCKETIO_AVAILABLE:
+    socketio = SocketIO(app, cors_allowed_origins='*')
+else:
+    class _DummySocketIO:
+        def emit(self, *args, **kwargs):
+            return None
+        def on(self, *args, **kwargs):
+            def _decorator(f):
+                return f
+            return _decorator
+        def run(self, the_app, host='0.0.0.0', port=8000, debug=False):
+            the_app.run(host=host, port=port, debug=debug)
+    socketio = _DummySocketIO()
 
 def get_local_ip():
     try:
@@ -127,12 +161,72 @@ def remote_score():
 def qr():
     pool = request.args.get('pool', '1')
     ip = get_local_ip()
-    url = f"http://{ip}:8000/remote-score?pool={pool}"
+    # create signed token to pair remote device with a pool (HMAC)
+    pidx = int(pool) - 1
+    expiry = int(time.time() + 60 * 60)
+    payload = f"{pidx}:{expiry}".encode()
+    sig = hmac.new(SECRET_KEY, payload, hashlib.sha256).hexdigest()
+    token = base64.urlsafe_b64encode(b"%b:%b" % (payload, sig.encode())).decode()
+    url = f"http://{ip}:8000/remote-score?pool={pool}&token={token}"
     img = qrcode.make(url)
     buf = BytesIO()
     img.save(buf, format='PNG')
     buf.seek(0)
     return send_file(buf, mimetype='image/png')
+
+
+# Remote scores API: POST to submit scores, GET to retrieve
+@app.route('/api/remote-scores', methods=['GET', 'POST'])
+def api_remote_scores():
+    if request.method == 'POST':
+        try:
+            data = request.get_json(force=True)
+            pool = int(data.get('pool', 1)) - 1
+            scores = data.get('scores', {})
+            token = data.get('token')
+            # validate HMAC token if provided
+            if token:
+                try:
+                    decoded = base64.urlsafe_b64decode(token.encode())
+                    # decoded format: b"<pool>:<expiry>:<sig>"
+                    parts = decoded.split(b':')
+                    if len(parts) < 3:
+                        return {'status': 'error', 'message': 'invalid token format'}, 403
+                    p_from_token = int(parts[0].decode())
+                    expiry = int(parts[1].decode())
+                    sig = parts[2].decode()
+                    if p_from_token != pool:
+                        return {'status': 'error', 'message': 'token pool mismatch'}, 403
+                    if expiry < time.time():
+                        return {'status': 'error', 'message': 'token expired'}, 403
+                    payload = f"{p_from_token}:{expiry}".encode()
+                    expected = hmac.new(SECRET_KEY, payload, hashlib.sha256).hexdigest()
+                    if not hmac.compare_digest(expected, sig):
+                        return {'status': 'error', 'message': 'invalid token signature'}, 403
+                except Exception as e:
+                    return {'status': 'error', 'message': 'token parse error'}, 403
+            # store/merge
+            existing = remote_scores_store.get(pool, {})
+            existing.update(scores)
+            remote_scores_store[pool] = existing
+            # emit to websocket room for this pool
+            try:
+                socketio.emit('remote_scores', {'pool': pool, 'scores': existing}, namespace='/remote', room=f'pool-{pool}')
+            except Exception:
+                pass
+            return {'status': 'ok', 'pool': pool, 'count': len(existing)}
+        except Exception as e:
+            return {'status': 'error', 'message': str(e)}, 400
+    else:
+        # GET: optionally filter by pool
+        pool_q = request.args.get('pool')
+        if pool_q is not None:
+            try:
+                p = int(pool_q) - 1
+                return remote_scores_store.get(p, {})
+            except:
+                return {}, 400
+        return remote_scores_store
 
 @app.route('/de')
 def de():
@@ -145,5 +239,17 @@ def cont():
     # is read client-side so the user doesn't need to re-import.
     return redirect(url_for('seeding'))
 
+@socketio.on('join', namespace='/remote')
+def socket_join(data):
+    try:
+        pool = int(data.get('pool'))
+        room = f'pool-{pool}'
+        # join_room is a no-op when Socket.IO isn't available
+        join_room(room)
+    except Exception:
+        pass
+
+
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8000, debug=False)
+    # If Socket.IO is unavailable, DummySocketIO.run will call Flask's app.run
+    socketio.run(app, host='0.0.0.0', port=8000, debug=False)

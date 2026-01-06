@@ -16,14 +16,40 @@
 
   <script>
     const poolId = parseInt(document.querySelector('.pools-bar').dataset.poolId);
-    let allPools = JSON.parse(localStorage.getItem('fencingapp:pools') || '[]');
+    let allPools = [];
+    try { allPools = JSON.parse(localStorage.getItem('fencingapp:pools') || '[]'); } catch(e){ allPools = []; }
     let pool = allPools[poolId - 1] || [];
-    let scores = JSON.parse(localStorage.getItem('fencingapp:pool-scores:' + (poolId - 1)) || '[]');
+    let scores = {};
+    try { scores = JSON.parse(localStorage.getItem('fencingapp:pool-scores:' + (poolId - 1)) || '{}'); } catch(e){ scores = {}; }
 
     function renderRemoteScoring() {
       const output = document.getElementById('remote-scoring-output');
       if (!pool || pool.length === 0) {
-        output.innerHTML = '<p>No fencers in this pool.</p>';
+        // Fallback: allow entering fencer names manually on the remote device.
+        output.innerHTML = `
+          <div style="padding:12px;">
+            <p>No pool data found on this device.</p>
+            <p>Please paste comma-separated fencer names, or enter the number of fencers.</p>
+            <textarea id="fencer-list" placeholder="Alice,Bob,Charlie" style="width:100%;height:80px"></textarea>
+            <div style="margin-top:8px">
+              <input id="fencer-count" type="number" min="2" placeholder="Or enter number of fencers" style="width:200px; padding:6px;">
+              <button id="load-pool" class="frutiger-aero-button" style="margin-left:8px">Load Pool</button>
+            </div>
+          </div>`;
+        document.getElementById('load-pool').addEventListener('click', () => {
+          const text = document.getElementById('fencer-list').value.trim();
+          const count = parseInt(document.getElementById('fencer-count').value || 0);
+          if (text) {
+            const names = text.split(',').map(s=>s.trim()).filter(Boolean);
+            pool = names.map(n => ({ name: n }));
+          } else if (count && count > 1) {
+            pool = Array.from({length: count}, (_,i) => ({ name: `Fencer ${i+1}`}));
+          } else {
+            alert('Enter names or a valid number');
+            return;
+          }
+          renderRemoteScoring();
+        });
         return;
       }
 
@@ -51,8 +77,8 @@
       html += '<button class="frutiger-aero-button submit-btn">Submit Scores</button>';
       output.innerHTML = html;
 
-      // Wire submit
-      document.querySelector('.submit-btn').addEventListener('click', () => {
+      // Wire submit: POST scores to server API so host can retrieve them
+        document.querySelector('.submit-btn').addEventListener('click', async () => {
         const inputs = document.querySelectorAll('.score-input');
         inputs.forEach(input => {
           const i = input.dataset.i;
@@ -62,9 +88,57 @@
             scores[`${i}-${j}`] = val;
           }
         });
-        localStorage.setItem('fencingapp:pool-scores:' + (poolId - 1), JSON.stringify(scores));
-        alert('Scores submitted!');
+        try {
+            // include token if present in URL
+            const params = new URLSearchParams(window.location.search);
+            const token = params.get('token');
+            const body = { pool: poolId, scores };
+            if (token) body.token = token;
+            const res = await fetch('/api/remote-scores', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify(body)
+            });
+          if (res.ok) {
+            alert('Scores submitted to host!');
+          } else {
+            alert('Failed to submit scores');
+          }
+        } catch (e) {
+          console.error('submit error', e);
+          alert('Network error submitting scores');
+        }
       });
+
+        // Auto-submit on input change with debounce
+        let autoTimer = null;
+        function scheduleAutoSubmit() {
+          if (autoTimer) clearTimeout(autoTimer);
+          autoTimer = setTimeout(() => { document.querySelector('.submit-btn').click(); }, 600);
+        }
+        document.addEventListener('input', (ev) => {
+          if (ev.target && ev.target.classList && ev.target.classList.contains('score-input')) scheduleAutoSubmit();
+        });
+
+      // Socket.IO client for connection/health (optional) — guard against missing io
+      (function initSocket(){
+        function connect(){
+          try{
+            if (!window.io) return;
+            const socket = io('/remote');
+            socket.on('connect', () => {
+              console.log('remote socket connected');
+            });
+            socket.on('ack', (d) => console.log('ack', d));
+          }catch(e){console.warn('socket init failed', e)}
+        }
+        if (window.io) connect(); else {
+          // attempt to load socket client, but ignore failures
+          const s = document.createElement('script'); s.src = '/socket.io/socket.io.js';
+          s.onload = connect; s.onerror = () => console.warn('socket.io client not available');
+          document.head.appendChild(s);
+        }
+      })();
     }
 
     renderRemoteScoring();

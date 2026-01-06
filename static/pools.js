@@ -1781,23 +1781,25 @@ document.addEventListener('DOMContentLoaded', () => {
     } catch (e) { console.error('showRemoveFencerModal error', e); }
   }
 
-  // Poll localStorage for remote score updates
+  // Poll server for remote score updates (previously used localStorage)
   function pollRemoteScores() {
-    setInterval(() => {
+    setInterval(async () => {
       try {
-        for (let pIdx = 0; pIdx < allPools.length; pIdx++) {
-          const key = 'fencingapp:pool-scores:' + pIdx;
-          const stored = localStorage.getItem(key);
-          if (stored) {
-            const remoteScores = JSON.parse(stored);
-            // Merge with current scores
-            const currentScores = loadPoolScores(pIdx, allPools[pIdx].length);
-            Object.assign(currentScores, remoteScores);
-            savePoolScores(pIdx, currentScores);
-            // Re-render if current pool
-            if (pIdx === currentPoolIndex) {
-              renderPool(currentPoolIndex);
-            }
+        const res = await fetch('/api/remote-scores');
+        if (!res.ok) return;
+        const payload = await res.json();
+        // payload is an object mapping poolIndex -> { scoreKey: value }
+        for (const key of Object.keys(payload || {})) {
+          const pIdx = parseInt(key, 10);
+          if (Number.isNaN(pIdx)) continue;
+          const remoteScores = payload[key] || {};
+          // Merge with current scores
+          const currentScores = loadPoolScores(pIdx, allPools[pIdx] ? allPools[pIdx].length : 0);
+          Object.assign(currentScores, remoteScores);
+          savePoolScores(pIdx, currentScores);
+          // Re-render if current pool
+          if (pIdx === currentPoolIndex) {
+            renderPool(currentPoolIndex);
           }
         }
       } catch (e) { console.error('Poll remote scores error', e); }
@@ -1817,6 +1819,43 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Start polling for remote updates
   pollRemoteScores();
+
+  // Initialize Socket.IO connection for real-time remote scoring updates
+  function initSocketIO() {
+    function connectSocket() {
+      try {
+        const socket = io('/remote');
+        socket.on('connect', () => {
+          console.log('Socket connected for remote scoring');
+          // join all pool rooms so host receives updates for any pool
+          for (let p = 0; p < allPools.length; p++) {
+            socket.emit('join', { pool: p });
+          }
+        });
+        socket.on('remote_scores', (payload) => {
+          try {
+            if (!payload) return;
+            const pIdx = parseInt(payload.pool, 10);
+            const remoteScores = payload.scores || {};
+            const currentScores = loadPoolScores(pIdx, allPools[pIdx] ? allPools[pIdx].length : 0);
+            Object.assign(currentScores, remoteScores);
+            savePoolScores(pIdx, currentScores);
+            if (pIdx === currentPoolIndex) renderPool(currentPoolIndex);
+          } catch (e) { console.error('socket remote_scores handler', e); }
+        });
+      } catch (e) { console.error('initSocket connect error', e); }
+    }
+    if (window.io) connectSocket();
+    else {
+      const s = document.createElement('script');
+      s.src = '/socket.io/socket.io.js';
+      s.onload = connectSocket;
+      s.onerror = () => { console.warn('Failed to load socket.io client; falling back to polling'); };
+      document.head.appendChild(s);
+    }
+  }
+
+  initSocketIO();
 
   // Clean advancement initialization will be added below.
 });

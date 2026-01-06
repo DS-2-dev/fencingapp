@@ -373,15 +373,23 @@ body {
   transform: none; /* remove the lift effect */
 }
 
-/* Global override: shift all sub-bars (fixed control bars) to the right.
-   Adjust `--sub-bar-left-offset` if you want a different indent. The
-   !important flag ensures these fixed bars align consistently across the
-   app regardless of individual file rules. On small screens we revert to
-   the original offset to avoid horizontal overflow. */
+/* Sub-bar placement: anchor relative to the centered menu bar so
+   sub-bars keep a consistent indent regardless of monitor/viewport size.
+   Use `--menu-width` to match the menu and `--sub-bar-indent` to control
+   the inward tab/indent from the menu's left edge. */
 :root {
-  --sub-bar-left-offset: calc(2.5% + 160px);
+  /* Use relative units so bars align consistently across viewports.
+     `--menu-width` grows with viewport but clamps to a sensible range.
+     `--sub-bar-indent` scales with viewport (via vw) but clamps to a
+     practical minimum/maximum to avoid overlap on tiny or huge screens. */
+  --menu-width: clamp(760px, 75vw, 1138px);
+  --menu-padding-left: 20px; /* left padding used by .glass-menu-bar */
+  /* Reduce indent by 40px total (previously -20px); keep a 4px minimum. */
+  --sub-bar-indent: max(calc(clamp(16px, 4vw, 120px) - 40px), 4px);
 }
 
+/* Compute left so the sub-bars line up with the menu's left edge plus the
+   requested indent. This is robust across different monitor widths. */
 .checkin-bar,
 .seeding-bar,
 .pools-bar,
@@ -389,20 +397,25 @@ body {
 .summary-bar,
 .homepage-sub-bar,
 .date-card {
-  left: var(--sub-bar-left-offset) !important;
+  left: calc(50% - (var(--menu-width) / 2) + var(--sub-bar-indent)) !important;
+  transform: none !important;
 }
 
 /* Align pool/seeding content areas under the shifted sub-bars */
-.pools-area,
-.seeding-area {
-  left: var(--sub-bar-left-offset) !important;
+.pools-area {
+  /* Align leftmost pool header with the menu's inner left edge */
+  left: calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left)) !important;
   transition: left 200ms ease;
 }
 
-@media (max-width: 1080px) {
-  /* restore the previous layout on narrower viewports */
-  :root { --sub-bar-left-offset: calc(2.5% + 96px); }
+.seeding-area {
+  /* Keep seeding area aligned with sub-bars (indented from menu left) */
+  left: calc(50% - (var(--menu-width) / 2) + var(--sub-bar-indent)) !important;
+  transition: left 200ms ease;
 }
+
+/* Smaller screens will naturally reduce `--menu-width` via clamp();
+   keep a small override for very narrow viewports if needed below. */
 
 /* Minimize / Maximize UI states */
 body.app-minimized .checkin-bar,
@@ -434,7 +447,7 @@ body.app-minimized .homepage-sub-bar .frutiger-aero-button {
 .app-restore-btn {
   position: fixed;
   top: calc(30px + 80px - 29px);
-  left: var(--sub-bar-left-offset);
+  left: calc(50% - (var(--menu-width) / 2) + var(--sub-bar-indent));
   z-index: 11000;
   min-width: 56px;
   height: 32px;
@@ -470,10 +483,49 @@ body.app-maximized .date-card {
 }
 
 @media (max-width: 640px) {
-  /* On very small screens, keep controls usable: force normal layout */
+  /* On very small screens, ensure the menu fits the viewport and keep
+     the small restore button visible. */
   body.app-minimized .app-restore-btn { display: inline-flex !important; }
-  :root { --sub-bar-left-offset: 12px; }
-  .app-restore-btn { left: 12px !important; }
+  :root { --menu-width: 95vw; }
+  .app-restore-btn { left: calc(50% - (var(--menu-width) / 2) + var(--sub-bar-indent)) !important; }
+}
+
+/* Global custom scrollbars — modern, subtle, and consistent with the glass UI */
+:root {
+  --scrollbar-track: rgba(255,255,255,0.04);
+  --scrollbar-thumb: linear-gradient(180deg, rgba(255,255,255,0.18), rgba(255,255,255,0.12));
+  --scrollbar-thumb-hover: linear-gradient(180deg, rgba(255,255,255,0.24), rgba(255,255,255,0.16));
+  --scrollbar-radius: 10px;
+}
+
+/* WebKit browsers */
+*::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+*::-webkit-scrollbar-track {
+  background: var(--scrollbar-track);
+  border-radius: var(--scrollbar-radius);
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border-radius: var(--scrollbar-radius);
+  border: 3px solid transparent; /* creates padding around thumb */
+  background-clip: padding-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255,255,255,0.18) rgba(255,255,255,0.04);
+}
+
+/* Keep layout stable when scrollbars appear */
+html {
+  scrollbar-gutter: stable both-edges;
 }
 
 /* Ensure consistent, compact button height for all fixed sub-bars */

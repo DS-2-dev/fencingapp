@@ -401,8 +401,10 @@ body:not(.advancement-ready) .pools-bar .advancement-btn {
   width: 40%;
   position: fixed;
   /* place below the menu + checkin bar (menu ~30px + 80px, checkin-bar approx 50px) */
-  top: calc(0px + 80px + 60px);
-  right: 150px; /* align with the checkin bar */
+    top: calc(0px + 80px + 60px);
+    /* Align the cards-stack to the menu's inner left edge and shift left
+      by ~100 units (clamped) so it sits under the nav consistently. */
+    left: calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - clamp(60px, 8vw, 60px) + 460px);
   /* Prevent the cards stack from forcing a horizontal scrollbar. Use box-sizing
      so padding does not expand the width. Avoid constraining with an arbitrary
      max-width that can cause clipping on some viewports. */

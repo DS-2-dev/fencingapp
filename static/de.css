@@ -26,7 +26,7 @@
 
   position: fixed;
   top: calc(30px + 80px - 29px);
-  left: var(--sub-bar-left-offset);
+  left: calc(50% - (var(--menu-width) / 2) + var(--sub-bar-indent));
   transform: none;
   z-index: 999;
   max-width: calc(100% - 160px);
@@ -63,4 +63,237 @@
   min-width: 108px;
   padding: 10px 18px;
   width: auto !important;
+}
+
+/* DE cards stack: reuse existing fencer-card visuals and add spacing between pairs/BYEs */
+.de-cards-stack {
+  /* Fixed scroll area anchored to the menu's left inner edge */
+  position: fixed;
+  /* responsive offsets: allow left shift and controlled down shift */
+  --de-offset-x: clamp(-60px, -6vw, 0px); /* move left up to 60px (responsive) */
+  --de-offset-y: clamp(20px, 2vh, 30px); /* move down at least 20px */
+  top: calc(30px + 80px + 60px + var(--de-offset-y));
+  left: calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) + var(--de-offset-x));
+  bottom: 20px;
+  /* larger scroll area: min 640px, prefer 60vw, max 1400px */
+  width: clamp(640px, 60vw, 1400px);
+  /* allow more room relative to menu width */
+  max-width: calc(var(--menu-width) - 8px);
+  box-sizing: border-box;
+  padding: 12px 440px 20px 18px; /* increased right padding for advancing elements */
+  display: flex;
+  flex-direction: column; /* groups stacked vertically */
+  gap: clamp(16px, 3.5vw, 48px);
+  align-items: stretch; /* groups fill the scroll column */
+  overflow-y: auto;
+  overflow-x: auto; /* allow horizontal scrolling when content needs space */
+  scrollbar-gutter: stable both-edges;
+  scrollbar-gutter: stable both-edges;
+  -webkit-overflow-scrolling: touch;
+  z-index: 990; /* sit under fixed sub-bar (999) */
+}
+
+.de-cards-stack .de-pair {
+  --pair-gap: 6px;
+  display: flex;
+  flex-direction: row;
+  gap: 10px; /* space between controls and cards */
+  align-items: stretch;
+  /* restore the previous card length: full width within container but capped */
+  width: 100%;
+  max-width: 520px; /* previous preferred card length */
+  flex: 0 0 auto;
+  box-sizing: border-box;
+  margin: 0 auto;
+  overflow: visible;
+}
+
+.de-pair-cards {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pair-gap);
+  flex: 1;
+}
+
+/* wrapper holds pair and external controls */
+.de-pair-wrapper {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  width: auto; /* allow wrapper to size to the pair width */
+  gap: 12px;
+}
+
+/* advancing wrapper: single card and input, positioned to the right */
+.advancing-wrapper {
+  /* absolutely position the advancing card just to the right of the pair
+     so it doesn't shift the original pair when inserted */
+  position: absolute;
+  left: calc(100% + 24px);
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: center;
+  z-index: 20;
+  width: auto; /* JS will set width to match pair card width */
+}
+
+.advancing-wrapper .fencer-card {
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Style advancing fencer card to match the pair cards */
+.advancing-wrapper .fencer-card {
+  transform-origin: left top;
+  transform: scale(0.97);
+  margin-bottom: 0.5rem;
+  padding: 12px 18px;
+  border-radius: 18px;
+}
+
+.advancing-wrapper .fencer-row { gap: 10px; }
+.advancing-wrapper .fencer-left { gap: 6px; }
+.advancing-wrapper .fencer-name { font-size: 0.94rem; }
+.advancing-wrapper .fencer-meta { font-size: 0.80rem; opacity: 0.95; }
+.advancing-wrapper .card-actions .card-action { width: 38px; height: 38px; font-size: 0.95rem; }
+
+.pair-controls .score-input {
+  width: 56px;
+  min-height: 40px;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  /* reuse pool score input visuals for parity */
+  background: radial-gradient(
+    circle at top left,
+    rgba(255,255,255,0.22),
+    rgba(255,255,255,0.06)
+  );
+  backdrop-filter: blur(14px) saturate(160%) contrast(115%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%) contrast(115%);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 10px;
+  box-shadow: inset 0 0 12px rgba(255,255,255,0.04), 0 6px 14px rgba(0,0,0,0.18);
+  color: #ffffff;
+  font-weight: 700;
+  text-align: center;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  transition: box-shadow 180ms ease, border-color 180ms ease;
+  cursor: text;
+}
+
+.pair-controls .score-input:hover {
+  /* match the focus glow for consistent hover effect */
+  border-color: rgba(255,255,255,0.28);
+  box-shadow: 0 0 10px rgba(255,255,255,0.55), 0 0 20px rgba(255,255,255,0.25);
+}
+
+.pair-controls .score-input:focus,
+.pair-controls .score-input:focus-visible {
+  outline: none;
+  border-color: rgba(255,255,255,0.28);
+  box-shadow: 0 0 10px rgba(255,255,255,0.55), 0 0 20px rgba(255,255,255,0.25);
+}
+
+/* Apply same styling to advancing inputs */
+.advancing-wrapper .score-input {
+  width: 56px;
+  min-height: 40px;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  background: radial-gradient(
+    circle at top left,
+    rgba(255,255,255,0.22),
+    rgba(255,255,255,0.06)
+  );
+  backdrop-filter: blur(14px) saturate(160%) contrast(115%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%) contrast(115%);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: 10px;
+  box-shadow: inset 0 0 12px rgba(255,255,255,0.04), 0 6px 14px rgba(0,0,0,0.18);
+  color: #ffffff;
+  font-weight: 700;
+  text-align: center;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  transition: box-shadow 180ms ease, border-color 180ms ease;
+  cursor: text;
+}
+
+.advancing-wrapper .score-input:hover {
+  border-color: rgba(255,255,255,0.28);
+  box-shadow: 0 0 10px rgba(255,255,255,0.55), 0 0 20px rgba(255,255,255,0.25);
+}
+
+.advancing-wrapper .score-input:focus,
+.advancing-wrapper .score-input:focus-visible {
+  outline: none;
+  border-color: rgba(255,255,255,0.28);
+  box-shadow: 0 0 10px rgba(255,255,255,0.55), 0 0 20px rgba(255,255,255,0.25);
+}
+/* Controls container: vertical stacking aligned to pair height */
+.pair-controls {
+  display: flex;
+  flex-direction: column;
+  gap: var(--pair-gap); /* match spacing between fencer cards */
+  align-items: center;
+  justify-content: flex-start;
+  flex: 0 0 auto;
+}
+
+.pair-controls .score-input:nth-child(2) {
+  margin-top: 10px;
+}
+
+.de-cards-stack .de-pair.bye {
+  /* single-card bye still uses same vertical spacing */
+}
+
+.de-cards-stack .de-pair .fencer-card {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Increase size slightly (from 90% -> 95%) as requested and adjust spacing */
+.de-cards-stack .fencer-card {
+  transform-origin: left top;
+  transform: scale(0.97);
+  /* adjust vertical rhythm when scaled */
+  margin-bottom: 0.5rem;
+  padding: 12px 18px;
+  border-radius: 18px;
+}
+
+.de-cards-stack .fencer-row { gap: 10px; }
+.de-cards-stack .fencer-left { gap: 6px; }
+.de-cards-stack .fencer-name { font-size: 0.94rem; }
+.de-cards-stack .fencer-meta { font-size: 0.80rem; opacity: 0.95; }
+.de-cards-stack .card-actions .card-action { width: 38px; height: 38px; font-size: 0.95rem; }
+
+.de-cards-stack .de-pair.bye::after {
+  content: "BYE";
+  display: block;
+  text-align: center;
+  font-weight: 700;
+  color: rgba(255,255,255,0.85);
+  padding: 6px 10px;
+  margin-top: 6px;
+  background: rgba(0,0,0,0.16);
+  border-radius: 10px;
+  width: fit-content;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* small visual separator is unnecessary with grid gap, but keep for legacy */
+.de-cards-stack .pair-sep {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(0,0,0,0.02), rgba(0,0,0,0.04));
+  margin: 6px 0 18px;
 }
