@@ -403,14 +403,15 @@ body {
 
 /* Align pool/seeding content areas under the shifted sub-bars */
 .pools-area {
-  /* Align leftmost pool header with the menu's inner left edge */
-  left: calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left)) !important;
+  /* Align leftmost pool header with the menu's inner left edge; nudge further left
+     so the pool header lines up with the universal nav bar across viewports. */
+  left: calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 64px) !important;
   transition: left 200ms ease;
 }
 
 .seeding-area {
-  /* Keep seeding area aligned with sub-bars (indented from menu left) */
-  left: calc(50% - (var(--menu-width) / 2) + var(--sub-bar-indent)) !important;
+  /* Keep seeding area aligned with the nav/menu; match pools-area adjustment */
+  left: calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 64px) !important;
   transition: left 200ms ease;
 }
 
