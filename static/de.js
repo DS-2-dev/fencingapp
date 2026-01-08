@@ -332,7 +332,18 @@ document.addEventListener('DOMContentLoaded', () => {
         advancing.appendChild(advCard);
         advInput.addEventListener('input', () => { try { markDirty(); } catch(e){}; try { updatePairState(pairEl); } catch(e){} });
         advInput.addEventListener('blur', () => { try { updatePairState(pairEl); } catch(e){} });
+        advInput.addEventListener('mouseenter', () => { try { advInput.focus(); if (typeof advInput.select === 'function') advInput.select(); } catch(e){} });
+        advInput.addEventListener('touchstart', () => { try { advInput.focus(); if (typeof advInput.select === 'function') advInput.select(); } catch(e){} }, { passive: true });
         advancing.appendChild(advInput);
+        // ensure advancing input height matches the card height after layout
+        try {
+          requestAnimationFrame(() => {
+            try {
+              const h = Math.max(36, Math.round(advCard.getBoundingClientRect().height));
+              advInput.style.height = h + 'px';
+            } catch (e) {}
+          });
+        } catch (e) {}
         pairEl.appendChild(advancing);
         // ensure advancing element is visible by scrolling the DE stack if needed
         try {
@@ -372,7 +383,18 @@ document.addEventListener('DOMContentLoaded', () => {
         advancing.appendChild(advCard);
         advInput.addEventListener('input', () => { try { markDirty(); } catch(e){}; try { updatePairState(pairEl); } catch(e){} });
         advInput.addEventListener('blur', () => { try { updatePairState(pairEl); } catch(e){} });
+        advInput.addEventListener('mouseenter', () => { try { advInput.focus(); if (typeof advInput.select === 'function') advInput.select(); } catch(e){} });
+        advInput.addEventListener('touchstart', () => { try { advInput.focus(); if (typeof advInput.select === 'function') advInput.select(); } catch(e){} }, { passive: true });
         advancing.appendChild(advInput);
+        // ensure advancing input height matches the card height after layout
+        try {
+          requestAnimationFrame(() => {
+            try {
+              const h = Math.max(36, Math.round(advCard.getBoundingClientRect().height));
+              advInput.style.height = h + 'px';
+            } catch (e) {}
+          });
+        } catch (e) {}
         pairEl.appendChild(advancing);
         // ensure advancing element is visible by scrolling the DE stack if needed
         try {
@@ -416,27 +438,30 @@ document.addEventListener('DOMContentLoaded', () => {
     pairWrap.className = 'de-pair' + (b ? '' : ' bye');
 
     // controls container: inside the pair, displays score inputs vertically
-    const controls = document.createElement('div');
-    controls.className = 'pair-controls';
-    // first input for the top card
-    const inputA = document.createElement('input');
-    inputA.type = 'text';
-    inputA.className = 'score-input';
-    inputA.setAttribute('inputmode', 'numeric');
-    inputA.setAttribute('placeholder', '#');
-    inputA.dataset.pos = '0';
-    // second input if opponent exists
+    // For bye pairs (no opponent), do not create score inputs.
+    let controls = null;
+    let inputA = null;
     let inputB = null;
     if (b) {
+      controls = document.createElement('div');
+      controls.className = 'pair-controls';
+      // first input for the top card
+      inputA = document.createElement('input');
+      inputA.type = 'text';
+      inputA.className = 'score-input';
+      inputA.setAttribute('inputmode', 'numeric');
+      inputA.setAttribute('placeholder', '#');
+      inputA.dataset.pos = '0';
+      // second input for the opponent
       inputB = document.createElement('input');
       inputB.type = 'text';
       inputB.className = 'score-input';
       inputB.setAttribute('inputmode', 'numeric');
       inputB.setAttribute('placeholder', '#');
       inputB.dataset.pos = '1';
+      controls.appendChild(inputA);
+      controls.appendChild(inputB);
     }
-    controls.appendChild(inputA);
-    if (inputB) controls.appendChild(inputB);
 
     // cards container
     const cardsContainer = document.createElement('div');
@@ -447,13 +472,19 @@ document.addEventListener('DOMContentLoaded', () => {
     pairWrap.appendChild(cardsContainer);
     pairWrap.appendChild(controls);
 
-    // wire live validation on input and mark dirty on change
+    // wire live validation on input and mark dirty on change (only if inputs exist)
     const validate = () => updatePairState(pairWrapper);
-    inputA.addEventListener('input', () => { try { markDirty(); } catch(e){}; validate(); });
-    inputA.addEventListener('blur', validate);
+    if (inputA) {
+      inputA.addEventListener('input', () => { try { markDirty(); } catch(e){}; validate(); });
+      inputA.addEventListener('blur', validate);
+      inputA.addEventListener('mouseenter', () => { try { inputA.focus(); if (typeof inputA.select === 'function') inputA.select(); } catch(e){} });
+      inputA.addEventListener('touchstart', () => { try { inputA.focus(); if (typeof inputA.select === 'function') inputA.select(); } catch(e){} }, { passive: true });
+    }
     if (inputB) {
       inputB.addEventListener('input', () => { try { markDirty(); } catch(e){}; validate(); });
       inputB.addEventListener('blur', validate);
+      inputB.addEventListener('mouseenter', () => { try { inputB.focus(); if (typeof inputB.select === 'function') inputB.select(); } catch(e){} });
+      inputB.addEventListener('touchstart', () => { try { inputB.focus(); if (typeof inputB.select === 'function') inputB.select(); } catch(e){} }, { passive: true });
     }
 
     pairWrapper.appendChild(pairWrap);

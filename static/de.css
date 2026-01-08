@@ -83,7 +83,7 @@
   padding: 12px 440px 20px 18px; /* increased right padding for advancing elements */
   display: flex;
   flex-direction: column; /* groups stacked vertically */
-  gap: clamp(16px, 3.5vw, 48px);
+  gap: max(0px, calc(clamp(16px, 3.5vw, 48px) - 100px));
   align-items: stretch; /* groups fill the scroll column */
   overflow-y: auto;
   overflow-x: auto; /* allow horizontal scrolling when content needs space */
@@ -94,7 +94,7 @@
 }
 
 .de-cards-stack .de-pair {
-  --pair-gap: 6px;
+  --pair-gap: 0px;
   display: flex;
   flex-direction: row;
   gap: 10px; /* space between controls and cards */
@@ -133,7 +133,8 @@
   position: absolute;
   left: calc(100% + 24px);
   top: 50%;
-  transform: translateY(-50%);
+  /* Shift up to better vertically align the advancing input with the card */
+  transform: translateY(calc(-50% - 8px));
   display: flex;
   flex-direction: row;
   gap: 10px;
@@ -203,6 +204,7 @@
 }
 
 /* Apply same styling to advancing inputs */
+/* Make advancing input use the same fixed pixel sizing as regular inputs */
 .advancing-wrapper .score-input {
   width: 56px;
   min-height: 40px;
@@ -247,6 +249,7 @@
   align-items: center;
   justify-content: flex-start;
   flex: 0 0 auto;
+  margin-left: -50px;
 }
 
 .pair-controls .score-input:nth-child(2) {
