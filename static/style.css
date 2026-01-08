@@ -405,13 +405,21 @@ body {
 .pools-area {
   /* Align leftmost pool header with the menu's inner left edge; nudge further left
      so the pool header lines up with the universal nav bar across viewports. */
-  left: calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 64px) !important;
+  left: clamp(
+    calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 96px),
+    calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 58px),
+    calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 24px)
+  ) !important;
   transition: left 200ms ease;
 }
 
 .seeding-area {
   /* Keep seeding area aligned with the nav/menu; match pools-area adjustment */
-  left: calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 64px) !important;
+  left: clamp(
+    calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 96px),
+    calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 58px),
+    calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 24px)
+  ) !important;
   transition: left 200ms ease;
 }
 

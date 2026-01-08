@@ -144,14 +144,19 @@
 .pools-area {
   position: fixed;
   top: calc(30px + 80px + 95px);
-  /* align pools content with nav/menu left edge for consistent header alignment */
-  left: calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 64px);
-  right: 40px;
+  left: clamp(
+    calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 96px),
+    calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 58px),
+    calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 24px)
+  );
+  width: auto;
+  right: auto;
   bottom: 20px;
   overflow-y: auto;
   overflow-x: hidden;
   box-sizing: border-box;
-  padding: 12px 12px 36px 0;
+  margin-right: 300px;
+  padding: 12px 0 36px 0;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -188,7 +193,11 @@
 .seeding-area {
   position: fixed;
   top: calc(30px + 80px + 90px); /* nudged up 40px total to sit closer under the seeding bar */
-  left: calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 64px);
+  left: clamp(
+    calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 96px),
+    calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 58px),
+    calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) - 24px)
+  );
   /* extend the right edge slightly so hover translations have room
     without causing visual layout shifts — keeps appearance unchanged */
   right: 0;
@@ -574,8 +583,8 @@ body.removal-mode-active .remove-copy-btn {
   padding: 8px 12px;
 }
 .fencer-card {
-  width: 100%;
-  max-width: 100%;
+  width: calc(100% - 40px);
+  max-width: calc(100% - 40px);
   box-sizing: border-box; /* ensure padding doesn't exceed container */
   display: flex;
   will-change: transform;
@@ -1651,6 +1660,10 @@ body.modal-open { overflow: hidden; }
   justify-content: flex-start;
   gap: 0;
   padding: 6px 8px;
+  width: calc(100% - 40px);
+  max-width: calc(100% - 40px);
+  box-sizing: border-box;
+  margin-left: 40px;
 }
 
 /* Make each fencer row in the pool look like the other fencer cards: glassy

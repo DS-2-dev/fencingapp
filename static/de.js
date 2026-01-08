@@ -1,4 +1,224 @@
 document.addEventListener('DOMContentLoaded', () => {
+  // Remove Fencer button: toggle removal mode and allow fencer removal with modal (match Pools page)
+  let deRemoveMode = false;
+  const removeCopyBtn = document.querySelector('.remove-copy-btn');
+  const deCardsStack = document.getElementById('de-cards-stack');
+  const saveBtn = document.querySelector('.save-btn');
+  let deDirty = false;
+
+  function markDirty() {
+    deDirty = true;
+    if (saveBtn) {
+      saveBtn.disabled = false;
+      saveBtn.classList.remove('disabled');
+      try { saveBtn.removeAttribute('aria-disabled'); } catch(e){}
+      try { saveBtn.removeAttribute('tabindex'); } catch(e){}
+    }
+  }
+
+  function markClean() {
+    deDirty = false;
+    if (saveBtn) {
+      saveBtn.disabled = true;
+      saveBtn.classList.add('disabled');
+      try { saveBtn.setAttribute('aria-disabled', 'true'); } catch(e){}
+      try { saveBtn.setAttribute('tabindex', '-1'); } catch(e){}
+    }
+  }
+
+  if (saveBtn) {
+    saveBtn.addEventListener('click', (e) => {
+      e && e.preventDefault();
+      try {
+        // Persist DE order (flat array of fencer ids) and pair scores
+        const order = [];
+        const scores = [];
+        const wrappers = container.querySelectorAll('.de-pair-wrapper');
+        wrappers.forEach((wrap) => {
+          const cards = wrap.querySelectorAll('.de-pair-cards .fencer-card');
+          cards.forEach(c => { if (c && c.dataset && c.dataset.id) order.push(c.dataset.id); });
+          const inputs = Array.from(wrap.querySelectorAll('.score-input'));
+          scores.push(inputs.map(inp => inp.value));
+        });
+        try { sessionStorage.setItem('fencingapp:de-order', JSON.stringify(order)); } catch(e) {}
+        try { sessionStorage.setItem('fencingapp:de-scores', JSON.stringify(scores)); } catch(e) {}
+      } catch (err) { console.error('Failed to save DE state', err); }
+      markClean();
+      console.log('DE Save clicked');
+    });
+  }
+  if (removeCopyBtn) {
+    removeCopyBtn.classList.remove('disabled');
+    removeCopyBtn.removeAttribute('aria-disabled');
+    removeCopyBtn.removeAttribute('tabindex');
+    removeCopyBtn.style.pointerEvents = 'auto';
+    removeCopyBtn.addEventListener('click', function(e) {
+      e.preventDefault();
+      deRemoveMode = !deRemoveMode;
+      removeCopyBtn.classList.toggle('remove-active', deRemoveMode);
+      if (deCardsStack) {
+        if (deRemoveMode) deCardsStack.classList.add('removal-mode');
+        else deCardsStack.classList.remove('removal-mode');
+      }
+    });
+  }
+
+  // Click handler for fencer cards in removal mode
+  if (deCardsStack) {
+    deCardsStack.addEventListener('click', function(e) {
+      if (!deRemoveMode) return;
+      const card = e.target.closest('.fencer-card');
+      if (!card || !deCardsStack.contains(card)) return;
+      // Show confirmation modal
+      const overlay = document.createElement('div');
+      overlay.className = 'modal-overlay';
+      overlay.setAttribute('role', 'dialog');
+      overlay.style.zIndex = 1220;
+      const modalCard = document.createElement('article');
+      modalCard.className = 'fencer-card modal-card pool-delete-modal';
+      // derive a friendly name like Pools modal
+      const rawName = (card.querySelector('.fencer-fullname') && card.querySelector('.fencer-fullname').textContent) ? card.querySelector('.fencer-fullname').textContent : (card.dataset && card.dataset.fencerName ? card.dataset.fencerName : '');
+      const parseNameLocal = (s) => {
+        if (!s || typeof s !== 'string') return { first: '', last: '' };
+        const trimmed = s.trim();
+        if (!trimmed) return { first: '', last: '' };
+        if (trimmed.indexOf(',') !== -1) {
+          const parts = trimmed.split(',');
+          return { last: (parts[0]||'').trim(), first: (parts.slice(1).join(',')||'').trim() };
+        }
+        const parts = trimmed.split(/\s+/);
+        if (parts.length === 1) return { first: parts[0], last: '' };
+        return { first: parts.slice(0, parts.length-1).join(' '), last: parts[parts.length-1] };
+      };
+      const parsed = parseNameLocal(rawName || '');
+      const lastUpper = (parsed.last || '').toString().toUpperCase();
+      const friendlyName = [parsed.first, lastUpper].filter(Boolean).join(' ').trim() || rawName || 'this fencer';
+
+      modalCard.innerHTML = `
+        <div class="fencer-row" style="flex-direction:column; align-items:stretch; gap:16px;">
+          <div class="fencer-name"><span style="font-size:1.12rem; font-weight:700;">You are going to remove ${friendlyName} in an important stage!</span></div>
+          <div class="fencer-name" style="display:flex; align-items:center; gap:10px;">
+            <span style="font-size:0.98rem; font-weight:400; line-height:1.4;">Reason for leave:</span>
+            <input class="reason-input" type="text" placeholder="Type reason..." style="flex:1; min-width:200px; padding:6px; border-radius:8px; border:1px solid rgba(255,255,255,0.06); background:transparent; color:inherit; outline:none; box-shadow:none;" />
+          </div>
+          <div class="meta-actions" style="display:flex; flex-direction:row; justify-content:flex-end; align-items:center; gap:14px;">
+            <button class="frutiger-aero-button modal-cancel confirm-btn" style="--hue:0deg; --sat:0;">Cancel</button>
+            <button class="frutiger-aero-button modal-confirm" style="--hue:140deg;">Confirm</button>
+          </div>
+        </div>`;
+      overlay.appendChild(modalCard);
+      document.body.appendChild(overlay);
+      requestAnimationFrame(() => { overlay.classList.add('modal-active'); modalCard.classList.add('fade-enter-active'); });
+      document.body.classList.add('modal-open');
+      const cleanup = () => {
+        try { overlay.classList.remove('modal-active'); modalCard.classList.remove('fade-enter-active'); document.body.classList.remove('modal-open'); setTimeout(() => { try { overlay && overlay.remove(); } catch(e) {} }, 520); } catch(e) {}
+      };
+      modalCard.querySelector('.modal-cancel').addEventListener('click', (ev) => { ev.preventDefault(); cleanup(); });
+      // Focus behavior for the reason input
+      const reasonInput = modalCard.querySelector('.reason-input');
+      if (reasonInput) {
+        reasonInput.addEventListener('mouseenter', () => { try { reasonInput.focus(); if (typeof reasonInput.select === 'function') reasonInput.select(); } catch(e){} });
+        reasonInput.addEventListener('touchstart', () => { try { reasonInput.focus(); if (typeof reasonInput.select === 'function') reasonInput.select(); } catch(e){} }, { passive: true });
+      }
+
+      modalCard.querySelector('.modal-confirm').addEventListener('click', (ev) => {
+        ev.preventDefault();
+        // capture optional reason and log it similarly to Pools
+        try {
+          const fid = card.dataset && card.dataset.id ? card.dataset.id : '';
+          const reasonVal = (modalCard.querySelector('.reason-input') && modalCard.querySelector('.reason-input').value) || '';
+          try {
+            const logKey = 'fencingapp:seeding-removals';
+            const raw = sessionStorage.getItem(logKey);
+            const arr = raw ? JSON.parse(raw) : [];
+            arr.push({ id: fid, name: rawName, reason: reasonVal, at: new Date().toISOString(), source: 'de' });
+            sessionStorage.setItem(logKey, JSON.stringify(arr));
+          } catch (err) { /* ignore logging errors */ }
+        } catch (e) {}
+        // Animate card removal using transitionend event (Pools method)
+        card.offsetWidth; // force reflow
+        card.classList.add('removing');
+        let handled = false;
+        const finish = () => {
+          if (handled) return; handled = true;
+          try { markDirty(); } catch(e) {}
+          card.remove();
+          cleanup();
+          deRemoveMode = false;
+          if (removeCopyBtn) removeCopyBtn.classList.remove('remove-active');
+          if (deCardsStack) deCardsStack.classList.remove('removal-mode');
+        };
+        const onEnd = (ev) => {
+          if (ev && ev.propertyName && ev.propertyName !== 'opacity') return;
+          card.removeEventListener('transitionend', onEnd);
+          finish();
+        };
+        card.addEventListener('transitionend', onEnd);
+        setTimeout(() => onEnd(), 420);
+      });
+      overlay.addEventListener('click', (ev) => { if (ev.target === overlay) cleanup(); });
+    });
+  }
+      // Add de-nav-muted to body for proper Results button style
+      try { document.body.classList.add('de-nav-muted'); } catch(e) {}
+    // Gray out Results button and show modal on click
+    try {
+      const resultsBtn = document.querySelector('.results-btn');
+      if (resultsBtn) {
+        resultsBtn.classList.add('disabled');
+        resultsBtn.setAttribute('aria-disabled', 'true');
+        resultsBtn.setAttribute('tabindex', '-1');
+        resultsBtn.style.pointerEvents = 'auto'; // allow click for modal
+        resultsBtn.addEventListener('click', function(e) {
+          e.preventDefault();
+          // Create modal overlay
+          const overlay = document.createElement('div');
+          overlay.className = 'modal-overlay';
+          overlay.setAttribute('role', 'dialog');
+          overlay.style.zIndex = 1220;
+          // Modal card
+          const card = document.createElement('article');
+          card.className = 'fencer-card modal-card';
+          card.style.maxWidth = '480px';
+          card.innerHTML = `
+            <div class="fencer-row">
+              <div class="fencer-left">
+                <div class="fencer-name" style="font-size:1.12rem; font-weight:700; margin-bottom:8px;">It seems this bracket isn't complete!</div>
+                <div class="fencer-meta" style="margin-bottom:18px; font-size:1rem;">Do you want to continue with current results?</div>
+                <div class="meta-actions" style="margin-top:10px; display:flex; gap:10px; justify-content:flex-end;">
+                  <button class="frutiger-aero-button modal-cancel confirm-btn" style="--hue:0deg; --sat:0;">Cancel</button>
+                  <button class="frutiger-aero-button modal-confirm" style="--hue:140deg;">Yes</button>
+                </div>
+              </div>
+            </div>`;
+          overlay.appendChild(card);
+          document.body.appendChild(overlay);
+          requestAnimationFrame(() => { overlay.classList.add('modal-active'); card.classList.add('fade-enter-active'); });
+          document.body.classList.add('modal-open');
+          // Modal button handlers
+          const cleanup = () => {
+            try { overlay.classList.remove('modal-active'); card.classList.remove('fade-enter-active'); document.body.classList.remove('modal-open'); setTimeout(() => { try { overlay && overlay.remove(); } catch(e) {} }, 520); } catch(e) {}
+          };
+          card.querySelector('.modal-cancel').addEventListener('click', (e) => { e.preventDefault(); cleanup(); });
+          card.querySelector('.modal-confirm').addEventListener('click', (e) => {
+            e.preventDefault();
+            cleanup();
+            window.location.href = '/results';
+          });
+          overlay.addEventListener('click', (e) => { if (e.target === overlay) cleanup(); });
+        });
+      }
+    } catch (e) {}
+  // Gray out Add Fencer button on DE page
+  try {
+    const addFencerBtn = document.querySelector('.add-fencer-btn');
+    if (addFencerBtn) {
+      addFencerBtn.classList.add('disabled');
+      addFencerBtn.setAttribute('aria-disabled', 'true');
+      addFencerBtn.setAttribute('tabindex', '-1');
+      addFencerBtn.style.pointerEvents = 'none';
+    }
+  } catch (e) {}
   // Populate DE cards stack by reusing the same fencer card markup used on Check-in
   const container = document.getElementById('de-cards-stack');
   if (!container) return;
@@ -110,6 +330,8 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         } catch (e) {}
         advancing.appendChild(advCard);
+        advInput.addEventListener('input', () => { try { markDirty(); } catch(e){}; try { updatePairState(pairEl); } catch(e){} });
+        advInput.addEventListener('blur', () => { try { updatePairState(pairEl); } catch(e){} });
         advancing.appendChild(advInput);
         pairEl.appendChild(advancing);
         // ensure advancing element is visible by scrolling the DE stack if needed
@@ -148,6 +370,8 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         } catch (e) {}
         advancing.appendChild(advCard);
+        advInput.addEventListener('input', () => { try { markDirty(); } catch(e){}; try { updatePairState(pairEl); } catch(e){} });
+        advInput.addEventListener('blur', () => { try { updatePairState(pairEl); } catch(e){} });
         advancing.appendChild(advInput);
         pairEl.appendChild(advancing);
         // ensure advancing element is visible by scrolling the DE stack if needed
@@ -223,12 +447,12 @@ document.addEventListener('DOMContentLoaded', () => {
     pairWrap.appendChild(cardsContainer);
     pairWrap.appendChild(controls);
 
-    // wire live validation on input
+    // wire live validation on input and mark dirty on change
     const validate = () => updatePairState(pairWrapper);
-    inputA.addEventListener('input', validate);
+    inputA.addEventListener('input', () => { try { markDirty(); } catch(e){}; validate(); });
     inputA.addEventListener('blur', validate);
     if (inputB) {
-      inputB.addEventListener('input', validate);
+      inputB.addEventListener('input', () => { try { markDirty(); } catch(e){}; validate(); });
       inputB.addEventListener('blur', validate);
     }
 
@@ -239,6 +463,9 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   container.appendChild(frag);
+
+  // Initialize save button state as clean/disabled
+  try { markClean(); } catch(e) {}
 
   // After rendering, sync input heights to match the corresponding card heights
   function syncControlHeights() {

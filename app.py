@@ -228,9 +228,16 @@ def api_remote_scores():
                 return {}, 400
         return remote_scores_store
 
+
+# DE page
 @app.route('/de')
 def de():
     return render_template('de.html', title="DE")
+
+# Results page
+@app.route('/results')
+def results():
+    return render_template('results.html', title="Results")
 
 
 @app.route('/continue')

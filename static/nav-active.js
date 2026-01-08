@@ -11,7 +11,8 @@
       {test: p=> p.startsWith('/checkin'), sel: '.checkin-btn'},
       {test: p=> p.startsWith('/seeding'), sel: '.seeding-btn'},
       {test: p=> p.startsWith('/pools'), sel: '.pools-btn'},
-      {test: p=> p.startsWith('/de'), sel: '.de-btn'}
+      {test: p=> p.startsWith('/de'), sel: '.de-btn'},
+      {test: p=> p.startsWith('/results'), sel: '.results-btn'}
     ];
     for (const m of map) if (m.test(path)) return m.sel;
     return null;

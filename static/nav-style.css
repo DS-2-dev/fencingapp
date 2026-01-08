@@ -714,10 +714,10 @@ body.summary-nav-disabled .results-btn[aria-disabled="true"] {
   pointer-events: none !important;
 }
 
-body.summary-nav-disabled .right-buttons .add-fencer-btn,
-body.summary-nav-disabled .right-buttons .remove-copy-btn,
-body.summary-nav-disabled .add-fencer-btn[aria-disabled="true"],
-body.summary-nav-disabled .remove-copy-btn[aria-disabled="true"] {
+
+/* DE page: gray out Results but keep clickable for modal interception */
+body.de-nav-muted .results-btn,
+body.de-nav-muted .results-btn[aria-disabled="true"] {
   --sat: 0 !important;
   --hue: 0deg !important;
   --bg: oklch(68% 0 0 / 0.92) !important;
@@ -728,7 +728,7 @@ body.summary-nav-disabled .remove-copy-btn[aria-disabled="true"] {
   box-shadow: none !important;
   color: rgba(255,255,255,0.92) !important;
   cursor: not-allowed !important;
-  pointer-events: none !important;
+  pointer-events: auto !important;
   opacity: 0.95 !important;
 }
 
