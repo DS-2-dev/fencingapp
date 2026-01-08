@@ -567,6 +567,12 @@ document.addEventListener('DOMContentLoaded', () => {
   function showAdvancementModal() {
     try {
       const list = computeAdvancementList();
+      // Persist advancement ordering so other pages (DE) can consume seeding
+      try {
+        const ids = Array.isArray(list) ? list.map(e => e.id) : [];
+        sessionStorage.setItem('fencingapp:advancement-order', JSON.stringify(ids));
+        sessionStorage.setItem('fencingapp:advancement-list', JSON.stringify(list));
+      } catch (e) {}
       if (!list || list.length === 0) {
         alert('No fencer data available to compute advancement.');
         return;
@@ -620,7 +626,7 @@ document.addEventListener('DOMContentLoaded', () => {
         <div class="fencer-row" style="flex-direction:column; gap:12px;">
           <div class="advancement-grid-container">
             ${headerHtml}
-            <div class="advancement-rows" style="max-height:420px;">${rowsHtml}</div>
+            <div class="advancement-rows" style="max-height:280px;">${rowsHtml}</div>
           </div>
           <div class="meta-actions" style="margin-top:12px; display:flex; justify-content:flex-end;
             gap:10px;">
@@ -1449,6 +1455,11 @@ document.addEventListener('DOMContentLoaded', () => {
         e && e.preventDefault();
         try {
           const list = computeAdvancementList();
+          try {
+            const ids = Array.isArray(list) ? list.map(e => e.id) : [];
+            sessionStorage.setItem('fencingapp:advancement-order', JSON.stringify(ids));
+            sessionStorage.setItem('fencingapp:advancement-list', JSON.stringify(list));
+          } catch (e) {}
           if (Array.isArray(list) && list.length > 0) {
             showAdvancementModal();
           } else {

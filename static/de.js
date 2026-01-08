@@ -242,6 +242,44 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   } catch (e) {}
 
+  // If an advancement ordering exists (from Pools), seed the DE bracket from that ranking.
+  try {
+    const advRaw = sessionStorage.getItem('fencingapp:advancement-order') || localStorage.getItem('fencingapp:advancement-order');
+    if (advRaw) {
+      const advIds = JSON.parse(advRaw) || [];
+      if (Array.isArray(advIds) && advIds.length) {
+        const byId = (fencers || []).reduce((m, f) => { m[f.id] = f; return m; }, {});
+        const N = advIds.length;
+        // Create natural pairs: [1,N], [2,N-1], [3,N-2], ...
+        const pairs = [];
+        for (let i = 0; i < Math.floor(N / 2); i++) {
+          pairs.push([advIds[i], advIds[N - 1 - i]]);
+        }
+        if (N % 2 === 1) pairs.push([advIds[Math.floor(N / 2)], null]);
+
+        // Arrange pairs so that odd-indexed pairs (1st,3rd,...) appear at the top
+        // in increasing order and even-indexed pairs (2nd,4th,...) appear at the
+        // bottom in decreasing order. This makes top seeds meet late in bracket.
+        const topPairs = [];
+        const bottomPairs = [];
+        for (let i = 0; i < pairs.length; i++) {
+          if (i % 2 === 0) topPairs.push(pairs[i]);
+          else bottomPairs.push(pairs[i]);
+        }
+        // bottomPairs should be appended in reverse so the 2nd pair ends up last
+        const orderedPairs = topPairs.concat(bottomPairs.reverse());
+
+        // Flatten ordered pairs into id order (filter out null BYEs)
+        const seededIds = [];
+        orderedPairs.forEach(p => { p.forEach(id => { if (id) seededIds.push(id); }); });
+
+        const seeded = seededIds.map(id => byId[id]).filter(Boolean);
+        const remaining = (fencers || []).filter(f => !seeded.includes(f));
+        if (seeded.length) fencers = seeded.concat(remaining);
+      }
+    }
+  } catch (e) {}
+
   // If no fencers, show a friendly hint
   if (!fencers || fencers.length === 0) {
     container.innerHTML = '<div class="empty-note">No fencers available. Import participants on the Check-in page.</div>';
@@ -316,6 +354,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const advancing = document.createElement('div');
         advancing.className = 'advancing-wrapper';
         const advCard = makeFencerCard(winnerFencer);
+        // Match advCard dimensions/transform to the source winner card for pixel parity
+        try {
+          const source = pair.querySelector('.de-pair-cards .fencer-card:first-child');
+          const src = source || pair.querySelector('.de-pair-cards .fencer-card');
+          if (src) {
+            const srcRect = src.getBoundingClientRect();
+            advCard.style.width = Math.round(srcRect.width) + 'px';
+            advCard.style.height = Math.round(srcRect.height) + 'px';
+            advCard.style.boxSizing = 'border-box';
+            const cs = window.getComputedStyle(src);
+            if (cs) {
+              if (cs.transform) advCard.style.transform = cs.transform;
+              if (cs.transformOrigin) advCard.style.transformOrigin = cs.transformOrigin;
+            }
+          }
+        } catch (e) {}
         const advInput = document.createElement('input');
         advInput.type = 'text';
         advInput.className = 'score-input';
@@ -345,6 +399,29 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         } catch (e) {}
         pairEl.appendChild(advancing);
+        // Recompute vertical alignment so advancing card centers on the pair exactly
+        try {
+          requestAnimationFrame(() => {
+            try {
+              const wrapperRect = pairEl.getBoundingClientRect();
+              const pairRect = pair.getBoundingClientRect();
+              const top = (pairRect.top - wrapperRect.top) + (pairRect.height / 2);
+              advancing.style.top = top + 'px';
+              // keep transform centering
+              advancing.style.transform = 'translateY(-50%)';
+              // Nudge the advancing input so its visual center matches the card center
+              try {
+                const advCardRect = advCard.getBoundingClientRect();
+                const advInputRect = advInput.getBoundingClientRect();
+                const cardCenter = advCardRect.top + advCardRect.height / 2;
+                const inputCenter = advInputRect.top + advInputRect.height / 2;
+                let inputNudge = Math.round(cardCenter - inputCenter);
+                inputNudge = Math.max(-18, Math.min(18, inputNudge));
+                advInput.style.transform = `translate(-3px, ${inputNudge}px)`;
+              } catch (e) {}
+            } catch (e) {}
+          });
+        } catch (e) {}
         // ensure advancing element is visible by scrolling the DE stack if needed
         try {
           const root = pairEl.closest('.de-cards-stack') || document.getElementById('de-cards-stack');
@@ -368,6 +445,22 @@ document.addEventListener('DOMContentLoaded', () => {
         const advancing = document.createElement('div');
         advancing.className = 'advancing-wrapper';
         const advCard = makeFencerCard(winnerFencer);
+        // Match advCard dimensions/transform to the source winner card for pixel parity
+        try {
+          const source = pair.querySelector('.de-pair-cards .fencer-card:nth-child(2)');
+          const src = source || pair.querySelector('.de-pair-cards .fencer-card');
+          if (src) {
+            const srcRect = src.getBoundingClientRect();
+            advCard.style.width = Math.round(srcRect.width) + 'px';
+            advCard.style.height = Math.round(srcRect.height) + 'px';
+            advCard.style.boxSizing = 'border-box';
+            const cs = window.getComputedStyle(src);
+            if (cs) {
+              if (cs.transform) advCard.style.transform = cs.transform;
+              if (cs.transformOrigin) advCard.style.transformOrigin = cs.transformOrigin;
+            }
+          }
+        } catch (e) {}
         const advInput = document.createElement('input');
         advInput.type = 'text';
         advInput.className = 'score-input';
@@ -396,6 +489,28 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         } catch (e) {}
         pairEl.appendChild(advancing);
+        // Recompute vertical alignment so advancing card centers on the pair exactly
+        try {
+          requestAnimationFrame(() => {
+            try {
+              const wrapperRect = pairEl.getBoundingClientRect();
+              const pairRect = pair.getBoundingClientRect();
+              const top = (pairRect.top - wrapperRect.top) + (pairRect.height / 2);
+              advancing.style.top = top + 'px';
+              advancing.style.transform = 'translateY(-50%)';
+              // Nudge the advancing input so its visual center matches the card center
+              try {
+                const advCardRect = advCard.getBoundingClientRect();
+                const advInputRect = advInput.getBoundingClientRect();
+                const cardCenter = advCardRect.top + advCardRect.height / 2;
+                const inputCenter = advInputRect.top + advInputRect.height / 2;
+                let inputNudge = Math.round(cardCenter - inputCenter);
+                inputNudge = Math.max(-18, Math.min(18, inputNudge));
+                advInput.style.transform = `translate(-3px, ${inputNudge}px)`;
+              } catch (e) {}
+            } catch (e) {}
+          });
+        } catch (e) {}
         // ensure advancing element is visible by scrolling the DE stack if needed
         try {
           const root = pairEl.closest('.de-cards-stack') || document.getElementById('de-cards-stack');

@@ -75,12 +75,14 @@
   top: calc(30px + 80px + 60px + var(--de-offset-y));
   left: calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) + var(--de-offset-x));
   bottom: 20px;
-  /* larger scroll area: min 640px, prefer 60vw, max 1400px */
-  width: clamp(640px, 60vw, 1400px);
+  /* larger scroll area: min 640px, prefer 60vw, max 3000px for extended scrollbar */
+  width: clamp(640px, 60vw, 3000px);
   /* allow more room relative to menu width */
-  max-width: calc(var(--menu-width) - 8px);
+  max-width: none;
+  /* extra right spacer to guarantee scrollable area for advancing elements (px) */
+  --de-right-spacer: 1200px;
   box-sizing: border-box;
-  padding: 12px 440px 20px 18px; /* increased right padding for advancing elements */
+  padding: 12px 440px 20px 18px; /* right padding for advancing elements */
   display: flex;
   flex-direction: column; /* groups stacked vertically */
   gap: max(0px, calc(clamp(16px, 3.5vw, 48px) - 100px));
@@ -91,6 +93,15 @@
   scrollbar-gutter: stable both-edges;
   -webkit-overflow-scrolling: touch;
   z-index: 990; /* sit under fixed sub-bar (999) */
+}
+
+/* Force extra horizontal scroll room without affecting card widths */
+.de-cards-stack::after {
+  content: "";
+  display: block;
+  width: var(--de-right-spacer);
+  height: 1px;
+  flex: 0 0 auto;
 }
 
 .de-cards-stack .de-pair {
@@ -133,8 +144,8 @@
   position: absolute;
   left: calc(100% + 24px);
   top: 50%;
-  /* Shift up to better vertically align the advancing input with the card */
-  transform: translateY(calc(-50% - 8px));
+   /* Nudge vertically so advancing card is centered on the pair middle */
+   transform: translateY(calc(-50% + 6px));
   display: flex;
   flex-direction: row;
   gap: 10px;
@@ -210,7 +221,8 @@
   min-height: 40px;
   padding: 6px 8px;
   box-sizing: border-box;
-  margin-left: 0;
+  /* small left shift so the input visually lines up with the source card */
+  margin-left: -6px;
   background: radial-gradient(
     circle at top left,
     rgba(255,255,255,0.22),
@@ -228,6 +240,12 @@
   letter-spacing: 0.02em;
   transition: box-shadow 180ms ease, border-color 180ms ease;
   cursor: text;
+}
+
+/* Ensure the advancing input sits exactly centered vertically next to the advancing card */
+.advancing-wrapper .score-input {
+  align-self: center;
+  margin-top: 0;
 }
 
 .advancing-wrapper .score-input:hover {
