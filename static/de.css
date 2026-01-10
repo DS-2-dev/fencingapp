@@ -75,14 +75,14 @@
   top: calc(30px + 80px + 60px + var(--de-offset-y));
   left: calc(50% - (var(--menu-width) / 2) + var(--menu-padding-left) + var(--de-offset-x));
   bottom: 20px;
-  /* larger scroll area: min 640px, prefer 60vw, max 3000px for extended scrollbar */
-  width: clamp(640px, 60vw, 3000px);
+  /* allow small DE layout: min 360px so 350px pairs fit comfortably */
+  width: clamp(360px, 60vw, 3000px);
   /* allow more room relative to menu width */
   max-width: none;
   /* extra right spacer to guarantee scrollable area for advancing elements (px) */
   --de-right-spacer: 1200px;
   box-sizing: border-box;
-  padding: 12px 440px 20px 18px; /* right padding for advancing elements */
+  padding: 12px 260px 20px 18px; /* reduced right padding to reveal wider pairs */
   display: flex;
   flex-direction: column; /* groups stacked vertically */
   gap: max(0px, calc(clamp(16px, 3.5vw, 48px) - 100px));
@@ -108,11 +108,12 @@
   --pair-gap: 0px;
   display: flex;
   flex-direction: row;
-  gap: 10px; /* space between controls and cards */
+  gap: 0px; /* space between controls and cards */
   align-items: stretch;
   /* restore the previous card length: full width within container but capped */
   width: 100%;
-  max-width: 520px; /* previous preferred card length */
+  max-width: 350px; /* preferred pair/card width */
+  width: 350px !important; /* force visible width */
   flex: 0 0 auto;
   box-sizing: border-box;
   margin: 0 auto;
@@ -124,6 +125,36 @@
   flex-direction: column;
   gap: var(--pair-gap);
   flex: 1;
+}
+
+/* Shift the entire second round/column to the right so the whole
+   column moves (avoid moving the bottom card of each pair). */
+.de-rounds-row .de-round-column:nth-child(2) .de-pair-cards {
+  transform: translateX(100px);
+}
+
+/* Also shift the text inputs (pair-controls) in the second round column so
+   the score inputs align with the shifted fencer cards. */
+.de-rounds-row .de-round-column:nth-child(2) .pair-controls {
+  transform: translateX(100px);
+}
+
+/* Make TBD placeholder cards invisible but keep them in the DOM/layout
+   so they still act as placeholders for advancement logic. */
+.fencer-card.placeholder {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Hide the pair controls when a pair contains a placeholder card so
+   placeholder pairs do not expose score inputs visually. */
+.de-pair:has(.fencer-card.placeholder) .pair-controls {
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
+  height: 0;
+  margin: 0;
 }
 
 /* wrapper holds pair and external controls */
@@ -221,8 +252,8 @@
   min-height: 40px;
   padding: 6px 8px;
   box-sizing: border-box;
-  /* small left shift so the input visually lines up with the source card */
-  margin-left: -6px;
+  /* no extra offset; spacing controlled by .de-pair gap */
+  margin-left: 0;
   background: radial-gradient(
     circle at top left,
     rgba(255,255,255,0.22),
@@ -265,9 +296,11 @@
   flex-direction: column;
   gap: var(--pair-gap); /* match spacing between fencer cards */
   align-items: center;
-  justify-content: flex-start;
+  justify-content: flex-start; /* keep per-input vertical flow; JS will vertically align each input */
+  align-self: stretch; /* stretch to match the pair's height so centering transforms work */
   flex: 0 0 auto;
-  margin-left: -50px;
+  /* keep controls immediately to the right; rely on .de-pair gap (10px) for spacing */
+  margin-left: 0;
 }
 
 .pair-controls .score-input:nth-child(2) {
@@ -292,6 +325,22 @@
   padding: 12px 18px;
   border-radius: 18px;
   transition: transform 0.42s cubic-bezier(.7,-0.4,.4,1.4), opacity 0.42s cubic-bezier(.7,-0.4,.4,1.4);
+}
+
+/* Ensure DE stack fencer cards use the full available pair width
+   (override global .fencer-card calc) so increasing .de-pair max-width
+   actually increases visible card length. */
+.de-cards-stack .fencer-card {
+  width: 100% !important;
+  max-width: none !important;
+  box-sizing: border-box;
+}
+
+/* Force each fencer card in the DE stack to exact pixel width */
+.de-cards-stack .fencer-card {
+  width: 350px !important;
+  max-width: 350px !important;
+  box-sizing: border-box !important;
 }
 
 .de-cards-stack .fencer-card.removing {
@@ -326,17 +375,18 @@
 
 .de-cards-stack .de-pair.bye::after {
   content: "BYE";
+  /* Keep the pseudo-element in the DOM for layout/logic but hide it visually */
+  visibility: hidden;
+  opacity: 0;
+  pointer-events: none;
   display: block;
   text-align: center;
   font-weight: 700;
-  color: rgba(255,255,255,0.85);
-  padding: 6px 10px;
-  margin-top: 6px;
-  background: rgba(0,0,0,0.16);
-  border-radius: 10px;
-  width: fit-content;
-  margin-left: auto;
-  margin-right: auto;
+  /* remove visual chrome */
+  background: transparent;
+  color: transparent;
+  padding: 0;
+  margin: 0;
 }
 
 /* small visual separator is unnecessary with grid gap, but keep for legacy */
