@@ -1,10 +1,26 @@
+@font-face {
+  font-family: 'Frutiger';
+  src: url('/static/frutiger.tff') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Neutron';
+  src: url('/static/neutrond.ttf') format('truetype');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 body {
-  /*background-image: url('/static/51.jpg'); */
+  /*background-image: url('/static/back04.jpg'); */
   background-color: rgb(0, 0, 0);
   background-size: cover;
   background-position: center;
   background-repeat: no-repeat;
-  font-family: 'Segoe UI', sans-serif;
+  font-family: 'Frutiger', 'Segoe UI', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   margin: 0;
   padding: 0;
   display: flex;
@@ -386,6 +402,14 @@ body {
   --menu-padding-left: 20px; /* left padding used by .glass-menu-bar */
   /* Reduce indent by 40px total (previously -20px); keep a 4px minimum. */
   --sub-bar-indent: max(calc(clamp(16px, 4vw, 120px) - 40px), 4px);
+}
+
+/* Use Frutiger for the universal nav bar and all menu text */
+.glass-menu-bar,
+.glass-menu-bar .top-row,
+.glass-menu-bar .main-buttons,
+.glass-menu-bar .nav-btn {
+  font-family: 'Frutiger', 'Segoe UI', system-ui, -apple-system, Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 /* Compute left so the sub-bars line up with the menu's left edge plus the

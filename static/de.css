@@ -120,11 +120,173 @@
   overflow: visible;
 }
 
+/* Ensure we can place an absolute divider anchored to the full pair card */
+.de-cards-stack .de-pair {
+  position: relative;
+}
+
+/* Make the pair look like a single unified card with top/bottom rows */
+.de-cards-stack .de-pair {
+  /* Match the summary card glass exactly for visual parity */
+  background: radial-gradient(
+    circle at top left,
+    rgba(255,255,255,0.3),
+    rgba(255,255,255,0.1)
+  );
+  backdrop-filter: blur(20px) saturate(200%) contrast(130%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%) contrast(130%);
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow:
+    inset 0 0 40px rgba(255,255,255,0.08),
+    0 4px 20px rgba(0,0,0,0.2);
+  border-radius: 16px;
+  padding: 12px 18px;
+  gap: 10px;
+  align-items: stretch;
+}
+
 .de-pair-cards {
   display: flex;
   flex-direction: column;
   gap: var(--pair-gap);
   flex: 1;
+}
+
+/* Draw a subtle centered divider between the top and bottom fencer rows
+   to match the summary page separator style. Using an absolute :before keeps
+   the line perfectly centered regardless of row heights or wrapping. */
+.de-pair-cards {
+  position: relative;
+}
+.de-pair-cards::before {
+  display: none; /* replaced by .de-pair::after which centers against full card height */
+}
+
+/* Stronger centered divider anchored to the whole pair card's midpoint */
+.de-cards-stack .de-pair::after {
+  display: none; /* replaced by dynamic .pair-divider positioned via JS */
+}
+
+/* Visual style for dynamic pair divider element. JS positions this element
+   at the midpoint between the two fencer row centers for robust centering. */
+.de-pair .pair-divider {
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  height: 3px;
+  border-radius: 2px;
+  background: linear-gradient(to right, rgba(255,255,255,0.06), rgba(255,255,255,0.28), rgba(255,255,255,0.06));
+  box-shadow: 0 2px 12px rgba(255,255,255,0.10), inset 0 1px 4px rgba(255,255,255,0.04);
+  pointer-events: none;
+  z-index: 6;
+}
+
+/* Each pair-row holds a fencer card on the left and the score input on the right */
+.pair-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.pair-row .score-input {
+  margin-left: 12px;
+  flex: 0 0 auto;
+  /* Match pools numeric input visuals: compact and transparent */
+  width: 56px;
+  min-height: 40px;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  background: transparent !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  color: inherit;
+  font-weight: 700;
+  text-align: center;
+  max-height: 52px; /* prevent extreme stretching */
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 120ms ease;
+  cursor: text;
+  max-height: 52px; /* prevent extreme stretching */
+  overflow: hidden;
+}
+
+.pair-row .score-input:hover {
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
+.pair-row .score-input:focus,
+.pair-row .score-input:focus-visible {
+  outline: none;
+  border-color: rgba(255,255,255,0.16) !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.04) !important;
+}
+
+/* Win / Error glow for DE score inputs — stronger and specific to DE pairs */
+.de-pair .score-input.score-input-win,
+.de-pair .pair-row .score-input.score-input-win,
+.advancing-wrapper .score-input.score-input-win {
+  border-color: rgba(100, 255, 150, 0.85) !important;
+  box-shadow: inset 0 0 12px rgba(255,255,255,0.04), 0 0 20px rgba(100, 255, 150, 0.45) !important;
+  transition: box-shadow 220ms ease, border-color 180ms ease, transform 140ms ease;
+}
+.de-pair .score-input.score-input-win:focus,
+.de-pair .score-input.score-input-win:focus-visible {
+  box-shadow: inset 0 0 12px rgba(255,255,255,0.04), 0 0 26px rgba(100,255,150,0.55) !important;
+}
+
+.de-pair .score-input.score-input-error,
+.de-pair .pair-row .score-input.score-input-error,
+.advancing-wrapper .score-input.score-input-error {
+  border-color: rgba(255, 100, 100, 0.9) !important;
+  box-shadow: inset 0 0 12px rgba(255,255,255,0.04), 0 0 16px rgba(255, 100, 100, 0.45) !important;
+  transition: box-shadow 220ms ease, border-color 180ms ease, transform 140ms ease;
+}
+.de-pair .score-input.score-input-error:focus,
+.de-pair .score-input.score-input-error:focus-visible {
+  box-shadow: inset 0 0 12px rgba(255,255,255,0.04), 0 0 22px rgba(255,100,100,0.55) !important;
+}
+
+/* Left-positioned info button and spacing inside pair-fencer */
+.pair-fencer .card-actions { margin-right: 12px; order: -1; flex: 0 0 46px; }
+.pair-fencer .fencer-left { flex: 1 1 auto; min-width: 0; }
+
+/* Allow names/meta to wrap rather than truncating so text won't overflow
+   and inputs remain positioned; reserve fixed space for actions so the
+   input column stays stable. */
+.pair-fencer .fencer-name,
+.pair-fencer .fencer-fullname {
+  display: block;
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+}
+.pair-fencer .fencer-meta {
+  white-space: normal;
+  overflow: visible;
+  text-overflow: clip;
+  opacity: 0.95;
+  font-size: 0.85rem !important; /* enforce the requested size */
+  line-height: 1.05 !important;
+  margin-top: -2px !important; /* scooch info row up toward the name */
+}
+
+/* Visual merge: make individual fencer rows visually part of the same pair card */
+.de-pair-cards .pair-fencer {
+  background: transparent;
+  box-shadow: none;
+  padding: 10px 6px;
+  border-radius: 0;
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+.de-pair-cards .pair-fencer + .pair-fencer {
+  /* Use the same subtle divider as the summary info rows so the two
+     fencer rows read as separate entries within a unified card. */
+  border-top: 1px solid rgba(255,255,255,0.10);
+  padding-top: 12px;
 }
 
 /* Shift the entire second round/column to the right so the whole
@@ -193,18 +355,67 @@
 
 /* Style advancing fencer card to match the pair cards */
 .advancing-wrapper .fencer-card {
+  /* Exact copy of `.de-pair.fencer-card` and `.de-cards-stack .fencer-card` visuals */
+  width: calc(100% - 40px) !important;
+  max-width: 520px !important;
+  box-sizing: border-box !important;
+  padding: 12px 18px !important;
+  color: white;
   transform-origin: left top;
-  transform: scale(0.97);
-  margin-bottom: 0.5rem;
-  padding: 12px 18px;
-  border-radius: 18px;
+  transform: scale(0.98);
+  transition: transform 0.34s cubic-bezier(.2,.9,.2,1.0), opacity 0.34s ease;
+  background: radial-gradient(
+    circle at top left,
+    rgba(255,255,255,0.3),
+    rgba(255,255,255,0.1)
+  );
+  backdrop-filter: blur(20px) saturate(200%) contrast(130%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%) contrast(130%);
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow: inset 0 0 40px rgba(255,255,255,0.08), 0 4px 20px rgba(0,0,0,0.2);
+  border-radius: 16px;
+}
+
+/* Ensure pair controls (score inputs) visually sit inside the pair card */
+.de-pair .pair-controls {
+  background: transparent;
+  padding: 4px 0;
+  margin-left: 8px;
 }
 
 .advancing-wrapper .fencer-row { gap: 10px; }
 .advancing-wrapper .fencer-left { gap: 6px; }
-.advancing-wrapper .fencer-name { font-size: 0.94rem; }
-.advancing-wrapper .fencer-meta { font-size: 0.80rem; opacity: 0.95; }
+.advancing-wrapper .fencer-name { font-size: 0.94rem; font-weight: 800; color: #ffffff; }
+.advancing-wrapper .fencer-meta { font-size: 0.85rem; opacity: 0.95; color: rgba(255,255,255,0.95); line-height:1.05 !important; margin-top:-2px !important; }
 .advancing-wrapper .card-actions .card-action { width: 38px; height: 38px; font-size: 0.95rem; }
+
+/* Hover state: mirror `.de-pair.fencer-card:hover` */
+.advancing-wrapper .fencer-card:hover {
+  transform: translateY(-2px) scale(1.0);
+  box-shadow: inset 0 0 44px rgba(255,255,255,0.08), 0 8px 26px rgba(0,0,0,0.28);
+  border-color: rgba(255,255,255,0.38);
+}
+
+/* Ensure action buttons inside advancing cards match check-in visuals */
+.advancing-wrapper .card-action {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  line-height: 1;
+  min-width: 0;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.28);
+}
+
+.advancing-wrapper .card-action.info-btn { --hue: 33; }
+
+.advancing-wrapper .card-action:hover {
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65);
+}
 
 .pair-controls .score-input {
   width: 56px;
@@ -212,37 +423,30 @@
   padding: 6px 8px;
   box-sizing: border-box;
   margin-left: 0;
-  /* reuse pool score input visuals for parity */
-  background: radial-gradient(
-    circle at top left,
-    rgba(255,255,255,0.22),
-    rgba(255,255,255,0.06)
-  );
-  backdrop-filter: blur(14px) saturate(160%) contrast(115%);
-  -webkit-backdrop-filter: blur(14px) saturate(160%) contrast(115%);
-  border: 1px solid rgba(255,255,255,0.18);
-  border-radius: 10px;
-  box-shadow: inset 0 0 12px rgba(255,255,255,0.04), 0 6px 14px rgba(0,0,0,0.18);
-  color: #ffffff;
+  /* Match pools/pool-header numeric input: compact, transparent, subtle border */
+  background: transparent !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  color: inherit;
   font-weight: 700;
   text-align: center;
   font-size: 1.05rem;
   letter-spacing: 0.02em;
-  transition: box-shadow 180ms ease, border-color 180ms ease;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 120ms ease;
   cursor: text;
+  background-clip: padding-box;
 }
 
 .pair-controls .score-input:hover {
-  /* match the focus glow for consistent hover effect */
-  border-color: rgba(255,255,255,0.28);
-  box-shadow: 0 0 10px rgba(255,255,255,0.55), 0 0 20px rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.12) !important;
 }
 
 .pair-controls .score-input:focus,
 .pair-controls .score-input:focus-visible {
   outline: none;
-  border-color: rgba(255,255,255,0.28);
-  box-shadow: 0 0 10px rgba(255,255,255,0.55), 0 0 20px rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.16) !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.04) !important;
 }
 
 /* Apply same styling to advancing inputs */
@@ -252,43 +456,53 @@
   min-height: 40px;
   padding: 6px 8px;
   box-sizing: border-box;
-  /* no extra offset; spacing controlled by .de-pair gap */
+  /* Match pools numeric input visuals: subtle and compact */
   margin-left: 0;
-  background: radial-gradient(
-    circle at top left,
-    rgba(255,255,255,0.22),
-    rgba(255,255,255,0.06)
-  );
-  backdrop-filter: blur(14px) saturate(160%) contrast(115%);
-  -webkit-backdrop-filter: blur(14px) saturate(160%) contrast(115%);
-  border: 1px solid rgba(255,255,255,0.18);
-  border-radius: 10px;
-  box-shadow: inset 0 0 12px rgba(255,255,255,0.04), 0 6px 14px rgba(0,0,0,0.18);
-  color: #ffffff;
+  background: transparent !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  color: inherit;
   font-weight: 700;
   text-align: center;
   font-size: 1.05rem;
   letter-spacing: 0.02em;
-  transition: box-shadow 180ms ease, border-color 180ms ease;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 120ms ease;
+  cursor: text;
+  align-self: center;
+  margin-top: 0;
+  max-height: 52px; /* prevent extreme stretching */
+}
+
+/* Ensure advancing inputs match pair-controls inputs exactly */
+.advancing-wrapper .score-input {
+  width: 56px;
+  min-height: 40px;
+  padding: 6px 8px;
+  box-sizing: border-box;
+  margin-left: 0;
+  background: transparent !important;
+  border: 1px solid rgba(255,255,255,0.06) !important;
+  border-radius: 8px !important;
+  box-shadow: none !important;
+  color: inherit;
+  font-weight: 700;
+  text-align: center;
+  font-size: 1.05rem;
+  letter-spacing: 0.02em;
+  transition: border-color 140ms ease, box-shadow 140ms ease, transform 120ms ease;
   cursor: text;
 }
 
-/* Ensure the advancing input sits exactly centered vertically next to the advancing card */
-.advancing-wrapper .score-input {
-  align-self: center;
-  margin-top: 0;
-}
-
 .advancing-wrapper .score-input:hover {
-  border-color: rgba(255,255,255,0.28);
-  box-shadow: 0 0 10px rgba(255,255,255,0.55), 0 0 20px rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.12) !important;
 }
 
 .advancing-wrapper .score-input:focus,
 .advancing-wrapper .score-input:focus-visible {
   outline: none;
-  border-color: rgba(255,255,255,0.28);
-  box-shadow: 0 0 10px rgba(255,255,255,0.55), 0 0 20px rgba(255,255,255,0.25);
+  border-color: rgba(255,255,255,0.16) !important;
+  box-shadow: 0 0 10px rgba(255,255,255,0.04) !important;
 }
 /* Controls container: vertical stacking aligned to pair height */
 .pair-controls {
@@ -315,33 +529,112 @@
   width: 100%;
   min-width: 0;
 }
-
-/* Increase size slightly (from 90% -> 95%) as requested and adjust spacing */
+/* Increase size slightly and apply stronger glass to fencer cards */
 .de-cards-stack .fencer-card {
   transform-origin: left top;
-  transform: scale(0.97);
-  /* adjust vertical rhythm when scaled */
+  transform: scale(0.98);
   margin-bottom: 0.5rem;
   padding: 12px 18px;
   border-radius: 18px;
-  transition: transform 0.42s cubic-bezier(.7,-0.4,.4,1.4), opacity 0.42s cubic-bezier(.7,-0.4,.4,1.4);
-}
+  transition: transform 0.34s cubic-bezier(.2,.9,.2,1.0), opacity 0.34s ease, box-shadow 240ms ease;
 
-/* Ensure DE stack fencer cards use the full available pair width
-   (override global .fencer-card calc) so increasing .de-pair max-width
-   actually increases visible card length. */
-.de-cards-stack .fencer-card {
+  /* Glass visuals for individual fencer-cards (advancing / legacy) */
+  background: radial-gradient(circle at top left, rgba(255,255,255,0.06), rgba(255,255,255,0.02));
+  backdrop-filter: blur(18px) saturate(180%) contrast(120%);
+  -webkit-backdrop-filter: blur(18px) saturate(180%) contrast(120%);
+  border: 1px solid rgba(255,255,255,0.12);
+  box-shadow: inset 0 0 28px rgba(255,255,255,0.04), 0 10px 26px rgba(0,0,0,0.32);
+
+  /* sizing: allow the card to fill the pair container while capping width for readability */
   width: 100% !important;
-  max-width: none !important;
-  box-sizing: border-box;
-}
-
-/* Force each fencer card in the DE stack to exact pixel width */
-.de-cards-stack .fencer-card {
-  width: 350px !important;
-  max-width: 350px !important;
+  max-width: 520px !important;
   box-sizing: border-box !important;
 }
+
+/* Ensure any programmatically-created advancing cards copy the exact
+   DE card visuals by adding the `de-like` marker class to the element. */
+.fencer-card.de-like {
+  width: calc(100% - 40px) !important;
+  max-width: 520px !important;
+  box-sizing: border-box !important;
+  padding: 12px 18px !important;
+  color: white;
+  transform-origin: left top;
+  transform: scale(0.98);
+  transition: transform 0.34s cubic-bezier(.2,.9,.2,1.0), opacity 0.34s ease, box-shadow 240ms ease;
+  background: radial-gradient(
+    circle at top left,
+    rgba(255,255,255,0.3),
+    rgba(255,255,255,0.1)
+  );
+  backdrop-filter: blur(20px) saturate(200%) contrast(130%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%) contrast(130%);
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow: inset 0 0 40px rgba(255,255,255,0.08), 0 4px 20px rgba(0,0,0,0.2);
+  border-radius: 16px;
+}
+.fencer-card.de-like:hover {
+  transform: translateY(-2px) scale(1.0);
+  box-shadow: inset 0 0 44px rgba(255,255,255,0.08), 0 8px 26px rgba(0,0,0,0.28);
+  border-color: rgba(255,255,255,0.38);
+}
+
+.fencer-card.de-like .card-action {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  line-height: 1;
+  min-width: 0;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.28);
+}
+
+/* For DE pair containers using `fencer-card`, prefer the check-in sizing
+   rather than forcing 350px; allow a slightly wider max for readability. */
+.de-pair.fencer-card {
+  width: calc(100% - 40px) !important;
+  max-width: 520px !important;
+  box-sizing: border-box !important;
+  padding: 12px 18px !important; /* match check-in padding */
+}
+
+/* Ensure DE pair card inherits the same visual effects as the universal
+   check-in cards (transforms, hover, color, and transitions). */
+.de-pair.fencer-card {
+  /* Use exact summary card styling so DE pairs match summary visuals */
+  width: calc(100% - 40px) !important;
+  max-width: 520px !important;
+  box-sizing: border-box !important;
+  padding: 12px 18px !important;
+  color: white;
+  transform-origin: left top;
+  transform: scale(0.98);
+  transition: transform 0.34s cubic-bezier(.2,.9,.2,1.0), opacity 0.34s ease;
+  background: radial-gradient(
+    circle at top left,
+    rgba(255,255,255,0.3),
+    rgba(255,255,255,0.1)
+  );
+  backdrop-filter: blur(20px) saturate(200%) contrast(130%);
+  -webkit-backdrop-filter: blur(60px) saturate(200%) contrast(130%);
+  border: 1px solid rgba(255,255,255,0.35);
+  box-shadow: inset 0 0 40px rgba(255,255,255,0.08), 0 4px 20px rgba(0,0,0,0.2);
+  border-radius: 16px;
+}
+
+.de-pair.fencer-card:hover {
+  transform: translateY(-2px) scale(1.0);
+  box-shadow: inset 0 0 44px rgba(255,255,255,0.08), 0 8px 26px rgba(0,0,0,0.28);
+  border-color: rgba(255,255,255,0.38);
+}
+
+/* Name styling to match check-in card: first name normal, last name uppercase */
+.de-pair.fencer-card .fencer-name { font-weight: 800; font-size: 1.02rem; color: #ffffff; display: flex; gap: 8px; align-items: baseline; white-space: nowrap; overflow: hidden; }
+.de-pair.fencer-card .fencer-meta { font-size: 0.85rem; opacity: 0.95; color: rgba(255,255,255,0.95); }
 
 .de-cards-stack .fencer-card.removing {
   opacity: 0;
@@ -357,21 +650,61 @@
   transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
 }
 .de-cards-stack.removal-mode .fencer-card:hover {
-  transform: translateX(-8px) scale(0.97);
+  transform: translateX(-8px) scale(0.99);
   position: relative;
   z-index: 995;
   cursor: pointer;
-  backdrop-filter: blur(200px) saturate(400%) contrast(130%);
-  -webkit-backdrop-filter: blur(200px) saturate(300%) contrast(130%);
-  border: 1px solid rgba(255,255,255,0.35);
-  box-shadow: inset 0 0 40px rgba(255,255,255,0.08), 0 4px 20px rgba(0,0,0,0.2);
+  backdrop-filter: blur(26px) saturate(260%) contrast(140%);
+  -webkit-backdrop-filter: blur(26px) saturate(260%) contrast(140%);
+  border: 1px solid rgba(255,255,255,0.32);
+  box-shadow: inset 0 0 44px rgba(255,255,255,0.08), 0 12px 28px rgba(0,0,0,0.28);
 }
 
 .de-cards-stack .fencer-row { gap: 10px; }
 .de-cards-stack .fencer-left { gap: 6px; }
 .de-cards-stack .fencer-name { font-size: 0.94rem; }
-.de-cards-stack .fencer-meta { font-size: 0.80rem; opacity: 0.95; }
+.de-cards-stack .fencer-meta { font-size: 0.85rem !important; opacity: 0.95; line-height:1.05 !important; margin-top:-2px !important; }
 .de-cards-stack .card-actions .card-action { width: 38px; height: 38px; font-size: 0.95rem; }
+
+/* Make action buttons inside DE pair rows match check-in visuals */
+.de-cards-stack .card-action,
+.pair-fencer .card-action {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.95rem;
+  line-height: 1;
+  min-width: 0;
+  box-shadow: 0 6px 14px rgba(0,0,0,0.28);
+  --sat: 0.22;
+  --glow-intensity: 0.45;
+  --bg: oklch(75% var(--sat) var(--hue, 200deg) / 0.8);
+  --bg-dark: oklch(45% var(--sat) var(--hue, 200deg) / 0.75);
+  --bottom-glow: radial-gradient(farthest-corner at bottom center, rgba(255,255,255,var(--glow-intensity)), transparent);
+  background: var(--bottom-glow), linear-gradient(to bottom, var(--bg-dark), var(--bg));
+  border: 1px solid var(--bg);
+  color: white;
+  text-shadow: 0 2px 0.5em rgba(0,0,0,0.2);
+  transition: box-shadow 220ms ease, background 160ms ease;
+}
+
+.de-cards-stack .card-action.info-btn,
+.pair-fencer .card-action.info-btn { --hue: 33; }
+
+.de-cards-stack .card-action:hover,
+.pair-fencer .card-action:hover {
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65);
+}
+
+.de-cards-stack .card-action:focus,
+.pair-fencer .card-action:focus-visible {
+  outline: none;
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 34px rgba(255,255,255,0.55);
+}
 
 .de-cards-stack .de-pair.bye::after {
   content: "BYE";
