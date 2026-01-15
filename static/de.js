@@ -222,6 +222,24 @@ document.addEventListener('DOMContentLoaded', () => {
   // Populate DE cards stack by reusing the same fencer card markup used on Check-in
   if (!container) return;
 
+  // Persistent win glow: any `.score-input` with the winning score (15)
+  // keeps the `score-input-win` class until the user clears or changes it.
+  container.addEventListener('input', function(e) {
+    try {
+      const tgt = e.target;
+      if (!tgt || !tgt.classList) return;
+      if (!tgt.classList.contains('score-input')) return;
+      const v = (tgt.value || '').toString().trim();
+      const n = parseInt(v, 10);
+      if (!isNaN(n) && n === 15) {
+        tgt.classList.add('score-input-win');
+        tgt.classList.remove('score-input-error');
+      } else {
+        tgt.classList.remove('score-input-win');
+      }
+    } catch (err) { /* ignore */ }
+  });
+
   // Propagation slots for building next-round advancing pairs
   // Keyed by slot index (0..), holds entries from two source pairs
   const propagationSlots = {};

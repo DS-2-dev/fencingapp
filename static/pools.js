@@ -452,7 +452,7 @@ document.addEventListener('DOMContentLoaded', () => {
       let html = `<!doctype html><html><head><meta charset="utf-8"><title>Pool Sheets</title>`;
       html += `<style>
         /* Black & white print-friendly styles */
-        body{font-family: Arial, Helvetica, sans-serif; color:#000; background:#fff; margin:18px; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+        body{font-family: 'Frutiger', sans-serif; color:#000; background:#fff; margin:18px; -webkit-print-color-adjust:exact; print-color-adjust:exact}
         h2{margin:6px 0 8px 0; font-size:18px}
         .pool{page-break-inside:avoid; margin-bottom:28px; padding:12px; border:1px solid #000}
         .fencer-list{display:block; margin-bottom:10px}
@@ -462,7 +462,7 @@ document.addEventListener('DOMContentLoaded', () => {
         .pairings{margin-top:12px}
         .pairing{margin-bottom:10px; padding-bottom:6px; border-bottom:1px dashed #000}
         .pairing-title{font-weight:700}
-        .pairing-score{margin-top:6px; font-family: monospace}
+        .pairing-score{margin-top:6px; font-family: 'Frutiger', sans-serif}
         .page-controls{margin-bottom:12px}
         /* Ensure blacked-out cells and any inline backgrounds print as solid */
         td[style*="background"]{ background:#000 !important; color:#fff !important; -webkit-print-color-adjust:exact; print-color-adjust:exact }
