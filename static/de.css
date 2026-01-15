@@ -197,7 +197,7 @@
   padding: 6px 8px;
   box-sizing: border-box;
   background: transparent !important;
-  border: 1px solid rgba(255,255,255,0.06) !important;
+  border: 1px solid rgba(255,255,255,0.14) !important;
   border-radius: 8px !important;
   box-shadow: none !important;
   color: inherit;
@@ -213,14 +213,14 @@
 }
 
 .pair-row .score-input:hover {
-  border-color: rgba(255,255,255,0.12) !important;
+  border-color: rgba(255,255,255,0.20) !important;
 }
 
 .pair-row .score-input:focus,
 .pair-row .score-input:focus-visible {
   outline: none;
-  border-color: rgba(255,255,255,0.16) !important;
-  box-shadow: 0 0 10px rgba(255,255,255,0.04) !important;
+  border-color: rgba(255,255,255,0.28) !important;
+  box-shadow: 0 0 14px rgba(255,255,255,0.06) !important;
 }
 
 /* Win / Error glow for DE score inputs — stronger and specific to DE pairs */
@@ -579,6 +579,15 @@
   border-color: rgba(255,255,255,0.38);
 }
 
+/* For DE-specific cards, allow disabling hover affordances by adding
+   the `no-hover` class. This prevents visual jumps when hovering inside
+   the bracket area. */
+.de-cards-stack .fencer-card.no-hover:hover {
+  transform: none !important;
+  box-shadow: none !important;
+  border-color: rgba(255,255,255,0.12) !important;
+}
+
 .fencer-card.de-like .card-action {
   width: 40px;
   height: 40px;
@@ -727,4 +736,30 @@
   height: 1px;
   background: linear-gradient(90deg, rgba(0,0,0,0.02), rgba(0,0,0,0.04));
   margin: 6px 0 18px;
+}
+
+/* Disable all hover/transition animations for DE cards marked `no-hover`. */
+.de-cards-stack .fencer-card.no-hover,
+.de-cards-stack .fencer-card.no-hover * {
+  transition: none !important;
+}
+.de-cards-stack .fencer-card.no-hover:hover,
+.de-cards-stack .fencer-card.no-hover:focus,
+.de-cards-stack .fencer-card.no-hover:active {
+  transform: none !important;
+  box-shadow: none !important;
+  filter: none !important;
+  outline: none !important;
+}
+
+/* Strong override: lock the visible chrome (border/box-shadow) so hovering
+   cannot change the edge appearance. Use ID selector for higher specificity
+   and !important to beat other hover rules. */
+#de-cards-stack .fencer-card.no-hover,
+#de-cards-stack .fencer-card.no-hover:hover,
+#de-cards-stack .fencer-card.no-hover:focus {
+  transition: none !important;
+  transform: none !important;
+  box-shadow: inset 0 0 40px rgba(255,255,255,0.08), 0 4px 20px rgba(0,0,0,0.2) !important;
+  border: 1px solid rgba(255,255,255,0.35) !important;
 }

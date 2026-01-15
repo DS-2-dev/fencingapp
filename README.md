@@ -1,5 +1,7 @@
-# a fencing app called Fence!
-# watch out Dan...
+## Fence!
+
+A fully operational software for managing fencing tournaments!
+
 
 ## License
 

@@ -381,6 +381,38 @@ body {
   transform: none; /* remove the lift effect */
 }
 
+/* Select-remove buttons inside the DE removal modal */
+.select-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+/* Modal reason input styling: stronger border, more padding and spacing */
+.modal-card .reason-input,
+.pool-delete-modal .reason-input {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid rgba(255,255,255,0.14) !important;
+  background: transparent;
+  color: inherit;
+  min-width: 220px;
+}
+.select-remove-btn {
+  transition: box-shadow 120ms ease, transform 80ms ease, outline 80ms ease;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+.select-remove-btn:hover {
+  box-shadow: 0 0 18px rgba(255,255,255,0.95), 0 0 28px rgba(255,255,255,0.65);
+}
+.select-remove-btn.selected {
+  box-shadow: 0 0 22px rgba(255,255,255,0.98), 0 0 36px rgba(255,255,255,0.72) !important;
+  transform: none;
+  outline: 2px solid rgba(255,255,255,0.06);
+}
+
 /* Sub-bar placement: anchor relative to the centered menu bar so
    sub-bars keep a consistent indent regardless of monitor/viewport size.
    Use `--menu-width` to match the menu and `--sub-bar-indent` to control
